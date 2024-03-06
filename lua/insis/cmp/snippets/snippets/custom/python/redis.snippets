@@ -1,0 +1,12 @@
+snippet redis_client "redis_client" b
+        import redis
+        redis_client = redis.Redis(host=${1:'localhost'}, port=${2:6379}, db=${3:0})
+        
+snippet redis_strict_client "redis_strict_client" b
+        import redis
+        redis_client = redis.StrictRedis(host=${1:'localhost'}, port=${2:6379}, db=${3:0}, password=${4}, decode_responses=True)
+        
+snippet redis_pool "redis_pool" b
+        import redis
+        pool = redis.ConnectionPool(host=${1:'localhost'}, port=${2:6379}, db=${3:0})
+        redis_client = redis.Redis(connection_pool=pool)

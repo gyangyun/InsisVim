@@ -1,0 +1,79 @@
+snippet with_multiprocess_pool "multiprocessing pool with context" b
+        from multiprocessing import Pool as ProcessPool
+        with ProcessPool(${1:n}) as pool:
+        	${0:pass}
+        
+snippet with_multithread_pool "multiprocessing dummy pool with context" b
+        from multiprocessing.dummy import Pool as ThreadPool
+        with ThreadPool(${1:n}) as pool:
+        	${0:pass}
+        
+snippet with_futures_process_pool "ProcessPoolExecutor with context" b
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(${1:n}) as pool:
+        	${0:pass}
+        
+snippet with_futures_thread_pool "ThreadPoolExecutor with context" b
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(${1:n}) as pool:
+        	${0:pass}
+        
+snippet with_futures_thread_pool "ThreadPoolExecutor with context" b
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(${1:n}) as pool:
+        	${0:pass}
+        
+snippet multiprocess_single "multiprocess single" b
+        from multiprocessing import Process
+        p = Process(target=${1}, args=${2:(,)})
+        p.start()
+        p.join()
+        
+snippet multiprocess_queue "multiprocess queue" b
+        from multiprocessing import Queue
+        q = Queue()
+        
+snippet multithread_single "multithread single" b
+        from threading import Thread
+        t = Thread(target=${1}, args=${2:(,)})
+        t.start()
+        t.join()
+        
+snippet multithread_queue "multithread queue" b
+        from queue import Queue
+        q = Queue()
+        
+snippet multiprocess_plus "multiprocess plus" b
+        from multiprocessing import Process
+        import signal
+        import time
+        
+        def terminate_handler(sig_num, addtion):
+        	LOGGER.error('current pid is %s, group id is %s' % (os.getpid(), os.getpgrp()))
+        	os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
+        
+        ps = []
+        for _ in range(${1:n}):
+        	ps.append(Process(target=${2:func}, args=(${3:args},), name=${4:name}, daemon=${5:True}))
+        
+        for p in ps:
+        	p.start()
+        	LOGGER.info(f'启动进程：{p.name}，进程ID：{p.pid}')
+        
+        signal.signal(signal.SIGTERM, terminate_handler)
+        while True:
+        	for i, p in enumerate(ps):
+        		if not p.is_alive():
+        			LOGGER.error('{} occured error, trying to reboot it'.format(p.name))
+        			ps[i] = Process(target=p._target, args=p._args, daemon=p.daemon, name=p._name)
+        			ps[i].start()
+        	time.sleep(60*5)
+        
+        for p in ps:
+        	p.join()
+        
+snippet multi_joblib "multi joblib" b
+        from multiprocessing import cpu_count
+        from joblib import Parallel, delayed
+        
+        Parallel(n_jobs=cpu_count(), backend='loky')(delayed(${1:func})($2) for ${2:x} in ${3:xs})

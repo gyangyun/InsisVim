@@ -1,0 +1,9 @@
+snippet mysql_init "mysql init"
+import java.util.Properties
+
+val url="jdbc:mysql:${1}"
+val prop = new Properties()
+prop.put("user", "${2}")
+prop.put("password", "${3}")
+prop.put("driver", "com.mysql.jdbc.Driver")
+endsnippet

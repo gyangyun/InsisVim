@@ -1,0 +1,517 @@
+snippet tf_duplicate_lib "tensorflow duplicate lib ok" b
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+endsnippet
+
+snippet tf_config "tensorflow config" b
+LEARNING_RATE_BASE = 0.01
+LEARNING_RATE_DECAY = 0.99
+REGULARIZATION_RATE = 0.0001
+MOVING_AVERAGE_DECAY = 0.99
+
+MODEL_DIRECTORY = "model/model.ckpt"
+LOGS_DIRECTORY = "logs/train"
+
+EPOCHS = 5
+BATCH_SIZE = 100
+NUM_LABELS = 10
+
+DISPLAY_STEP = 100
+VALIDATION_STEP = 500
+endsnippet
+
+snippet tf_get_weight_variable "tensorflow get weight variable with regularizer" b
+def get_weight_variable(shape, regularizer):
+	weights = tf.get_variable("weights", shape, initializer=tf.truncated_normal_initializer(stddev=0.1))
+	if regularizer != None:
+		tf.add_to_collection("losses", regularizer(weights))
+	return weights
+endsnippet
+
+snippet tf_get_biase_variable "tensorflow get weight variable" b
+def get_bias_variable(shape):
+	biases = tf.get_variable("biases", shape, initializer=tf.constant_initializer(0.0))
+	return biases
+endsnippet
+
+snippet tf_get_embedding_variable "tensorflow get embedding variable" b
+embedding = tf.get_variable("embedding",
+							[vocab_size, embedding_size],
+							dtype=tf.float32,
+							initializer=tf.initializers.random_normal(stddev=0.1),
+							trainable=True)
+endsnippet
+
+snippet tf_inference_full_connect "tensorflow inference" b
+with tf.variable_scope('layer1'):
+	weights = get_weight_variable([INPUT_NODE, LAYER1_NODE], regularizer)
+	biases = get_bias_variable([LAYER1_NODE])
+	layer1 = tf.nn.relu(tf.matmul(input_tensor, weights) + biases)
+endsnippet
+
+snippet tf_inference_conv "tensorflow inference conv" b
+with tf.variable_scope('layer1-conv1'):
+	conv1_weights = get_weight_variable([CONV1_SIZE, CONV1_SIZE, NUM_CHANNELS, CONV1_DEEP], regularizer)
+	conv1_biases = get_bias_variable([CONV1_DEEP])
+	conv1 = tf.nn.conv2d(input_tensor, conv1_weights, strides=[1, 1, 1, 1], padding='SAME')
+	relu1 = tf.nn.relu(tf.nn.bias_add(conv1, conv1_biases))
+endsnippet
+
+snippet tf_inference_flat "tensorflow inference flat" b
+with tf.name_scope("layer4-pool2"):
+	pool2 = tf.nn.max_pool(relu2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+	pool_shape = pool2.get_shape().as_list()
+	nodes = pool_shape[1] * pool_shape[2] * pool_shape[3]
+	reshaped = tf.reshape(pool2, [-1, nodes])
+endsnippet
+
+snippet tf_inference_pool "tensorflow inference pool" b
+with tf.name_scope("layer2-pool1"):
+	pool1 = tf.nn.max_pool(relu1, ksize = [1,2,2,1], strides=[1,2,2,1], padding="SAME")
+endsnippet
+
+snippet tf_x_y_ "tensorflow x and y_" b
+x = tf.placeholder(tf.float32, [None, INPUT_NODE], name='x-input')
+y_ = tf.placeholder(tf.float32, [None, OUTPUT_NODE], name='y-input')
+endsnippet
+
+snippet tf_regularizer "tensorflow regularizer" b
+regularizer = tf.contrib.layers.l2_regularizer(REGULARIZATION_RATE)
+endsnippet
+
+snippet tf_corss_entropy "tensorflow corss entropy loss plus" b
+cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=tf.argmax(y_, 1))
+cross_entropy_mean = tf.reduce_mean(cross_entropy)
+loss = cross_entropy_mean + tf.add_n(tf.get_collection('losses'))
+tf.summary.scalar('loss', loss)
+endsnippet
+
+snippet tf_accuracy "tensorflow accuracy" b
+correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+tf.summary.scalar('acc', accuracy)
+endsnippet
+
+snippet tf_learning_rate "tensorflow learning rate" b
+learning_rate = tf.train.exponential_decay(
+	LEARNING_RATE_BASE,
+	global_step,
+	${1:total_size} / BATCH_SIZE,
+	LEARNING_RATE_DECAY,
+	staircase=False)
+tf.summary.scalar('learning_rate', learning_rate)
+endsnippet
+
+snippet tf_em "tensorflow exponential moving average" b
+global_step = tf.Variable(0, trainable=False)
+
+ema = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)
+ema_op = ema.apply(tf.trainable_variables())
+endsnippet
+
+snippet tf_summary_merge_all "tensorflow summary merge all" b
+merged_summary_op = tf.summary.merge_all()
+endsnippet
+
+snippet tf_train_op "tensorflow train step" b
+train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
+with tf.control_dependencies([train_step, ema_op]):
+	train_op = tf.no_op(name='train')
+endsnippet
+
+snippet tf_save_save "tensorflow save save" b
+MODEL_SAVE_PATH = "model/"
+MODEL_NAME = "model.ckpt"
+
+saver = tf.train.Saver()
+if not os.path.exists(MODEL_SAVE_PATH):
+	os.makedirs(MODEL_SAVE_PATH)
+
+saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME))
+endsnippet
+
+snippet tf_save_restore_with_em "tensorflow save restore with em" b
+em = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY)
+em_to_restore = em.variables_to_restore()
+saver = tf.train.Saver(em_to_restore)
+
+ckpt = tf.train.get_checkpoint_state(MODEL_SAVE_PATH)
+if ckpt and ckpt.model_checkpoint_path:
+	saver.restore(sess, ckpt.model_checkpoint_path)
+endsnippet
+
+snippet tf_train_sess "tensorflow train session" b
+saver = tf.train.Saver()
+with tf.Session() as sess:
+	sess.run(tf.global_variables_initializer())
+
+	# Training cycle
+	total_batch = int(train_size / BATCH_SIZE)
+
+	# op to write logs to Tensorboard
+	summary_writer = tf.summary.FileWriter(LOGS_DIRECTORY, graph=tf.get_default_graph())
+
+	# Save the maximum accuracy value for validation data
+	max_acc = 0.
+
+	# Loop for epoch
+	for epoch in range(EPOCHS):
+
+		# Random shuffling
+		np.random.shuffle(train_total_data)
+		train_data_ = train_total_data[:, :-NUM_LABELS]
+		train_data_ = np.reshape(train_data_, (-1, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS))
+		train_labels_ = train_total_data[:, -NUM_LABELS:]
+
+		# Loop over all batches
+		for i in range(total_batch):
+
+			# Compute the offset of the current minibatch in the data.
+			offset = (i * BATCH_SIZE) % (train_size)
+			batch_xs = train_data_[offset:(offset + BATCH_SIZE), :]
+			batch_ys = train_labels_[offset:(offset + BATCH_SIZE), :]
+
+			# Run optimization op (backprop), loss op (to get loss value)
+			# and summary nodes
+			_, train_accuracy, summary = sess.run([train_op, accuracy, merged_summary_op],
+								feed_dict={x: batch_xs, y_: batch_ys})
+
+			# Write logs at every iteration
+			summary_writer.add_summary(summary, epoch * total_batch + i)
+
+			# Display logs
+			if i % DISPLAY_STEP == 0:
+				print("Epoch:", '%04d,' % (epoch + 1),
+				"batch_index %4d/%4d, training accuracy %.5f" % (i, total_batch, train_accuracy))
+
+			# Get accuracy for validation data
+			if i % VALIDATION_STEP == 0:
+				# Calculate accuracy
+				validation_accuracy = sess.run(accuracy,
+												feed_dict={x: validation_data, y_: validation_labels})
+
+				print("Epoch:", '%04d,' % (epoch + 1),
+				"batch_index %4d/%4d, validation accuracy %.5f" % (i, total_batch, validation_accuracy))
+
+			# Save the current model if the maximum accuracy is updated
+			if validation_accuracy > max_acc:
+				max_acc = validation_accuracy
+				save_path = saver.save(sess, MODEL_DIRECTORY)
+				print("Model updated and saved in file: %s" % save_path)
+endsnippet
+
+snippet tf_test_sess "tensorflow test session" b
+ema = tf.train.ExponentialMovingAverage(train.MOVING_AVERAGE_DECAY)
+ema_restore = ema.variables_to_restore()
+saver = tf.train.Saver(ema_restore)
+with tf.Session() as sess:
+	saver.restore(sess, train.MODEL_DIRECTORY)
+
+	test_size = test_labels.shape[0]
+	total_batch = int(test_size / BATCH_SIZE)
+
+	# Calculate accuracy for all mnist test images
+	acc_buffer = []
+
+	# Loop over all batches
+	for i in range(total_batch):
+		# Compute the offset of the current minibatch in the data.
+		offset = (i * BATCH_SIZE) % (test_size)
+		batch_xs = test_data[offset:(offset + BATCH_SIZE), :]
+		batch_ys = test_labels[offset:(offset + BATCH_SIZE), :]
+
+		acc = sess.run(accuracy, feed_dict={x: batch_xs, y_: batch_ys})
+
+		acc_buffer.append(acc)
+
+	print("test accuracy for the stored model: %g" % np.mean(acc_buffer))
+endsnippet
+
+snippet tf_tensorboard "tensorflow tensorboard" b
+TENSORBOARD_SAVE_PATH = 'tensorboard/textcnn'
+if not os.path.exists(TENSORBOARD_SAVE_PATH):
+	os.makedirs(TENSORBOARD_SAVE_PATH)
+
+tf.summary.scalar("loss", model.loss)
+tf.summary.scalar("accuracy", model.acc)
+merged_summary = tf.summary.merge_all()
+writer = tf.summary.FileWriter(TENSORBOARD_SAVE_PATH)
+
+writer.add_graph(session.graph)
+
+writer.add_summary(s, total_batch)
+endsnippet
+
+snippet tf_preprocess_word_index "tensorflow preprocess word_index" b
+import jieba
+from collections import Counter
+from operator import itemgetter
+
+with open('./2000_pos.txt', 'r') as f:
+	content = f.read()
+words = [word for word in jieba.cut(content) if word != '\n']
+stop_words = [line.strip() for line in open('./stopwords/stop_words.txt') if line.strip()]
+filterd_words = [word for word in words if word not in stop_words]
+counter = Counter()
+for word in filterd_words:
+	counter[word] += 1
+sorted_words_counter = sorted(counter.items(), key=itemgetter(1), reverse=True)
+vocab_size = 2000
+sorted_words = [x[0] for x in sorted_words_counter][:vocab_size-2]
+sorted_words.insert(0, '<PAD>')
+sorted_words.insert(1, '<UNK>')
+word_index = {word: index for (index, word) in enumerate(sorted_words)}
+index_word = {index: word for (index, word) in enumerate(sorted_words)}
+endsnippet
+
+snippet tf_preprocess_words_ids "tensorflow preprocess words_ids" b
+import numpy as np
+lines = [line.strip() for line in open('./2000_pos.txt') if line.strip()]
+lines_ids = []
+for line in lines:
+	words = jieba.cut(line)
+	words = [word for word in words if word not in stop_words]
+	ids = [word_index.get(word, 1) for word in words]
+	lines_ids.append(ids)
+data = np.array(lines_ids)
+
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+data = pad_sequences(data, value=word_index["<PAD>"], padding='post',maxlen=32)
+endsnippet
+
+snippet tf_lstm_bidirectional "tensorflow lstm bidirectional" b
+inputs = tf.nn.embedding_lookup(embedding, chars) # [batch_size ,maxlen ,emb_size]
+cell_fw = tf.nn.rnn_cell.LSTMCell(num_units=128) # [emb_size, state_size]
+cell_bw = tf.nn.rnn_cell.LSTMCell(num_units=128) # [emb_size, state_size]
+
+outs, state = tf.nn.bidirectional_dynamic_rnn(cell_fw=cell_fw,
+					cell_bw=cell_bw,
+					sequence_length=seq_len,
+					inputs=inputs,
+					dtype=tf.float32) # shape_of_outs 2个[batch_size, maxlen, state_size * 2] shape_of_state [batch_size, state_size * 2]
+out = tf.concat(outs, axis = 2) # [batch_size, maxlen, state_size * 2]
+
+logits = tf.layers.dense(out, units=num_classes) [batch_size, num_classes]
+predicts = tf.argmax(logits, axis = -1) # [batch_size, maxlen, 1]
+endsnippet
+
+snippet tf_lstm_single "tensorflow lstm single" b
+inputs = tf.nn.embedding_lookup(embedding, x) # [batch_size, maxlen, emb_size]
+cell = tf.nn.rnn_cell.LSTMCell(num_units = 120)
+out, state = tf.nn.dynamic_rnn(cell=cell,
+								inputs=inputs,
+								dtype=tf.float32) # shape_of_out [batch_size, maxlen, state_size] shape_of_state [batch_size, state_size]
+
+out_mean = tf.layers.average_pooling1d(out, pool_size=32, strides=1)[:,-1,:] # [batch_size, state_size]
+
+logits = tf.layers.dense(out_mean, units=num_classes) # [batch_size, num_classes]
+predicts = tf.argmax(logits, dimension=-1) # [batch_size, num_classes]
+endsnippet
+
+snippet tf_conv2d_inference "tensorflow conv2d inference" b
+import tensorflow as tf
+
+NUM_CHANNELS = 1
+CONV1_DEEP = 32
+CONV1_SIZE = 5
+CONV2_DEEP = 64
+CONV2_SIZE = 5
+FC_SIZE = 512
+NUM_LABELS = 10
+
+def get_weight_variable(shape, regularizer):
+	weights = tf.get_variable("weights", shape, initializer=tf.truncated_normal_initializer(stddev=0.1))
+	if regularizer != None:
+		tf.add_to_collection("losses", regularizer(weights))
+	return weights
+
+	def get_bias_variable(shape):
+	biases = tf.get_variable("biases", shape, initializer=tf.constant_initializer(0.0))
+	return biases
+
+	def inference(input_tensor, is_train, regularizer):
+	with tf.variable_scope('layer1-conv1'):
+		conv1_weights = get_weight_variable([CONV1_SIZE, CONV1_SIZE, NUM_CHANNELS, CONV1_DEEP], regularizer)
+		conv1_biases = get_bias_variable([CONV1_DEEP])
+		conv1 = tf.nn.conv2d(input_tensor, conv1_weights, strides=[1, 1, 1, 1], padding='SAME')
+		relu1 = tf.nn.relu(tf.nn.bias_add(conv1, conv1_biases))
+
+	with tf.name_scope("layer2-pool1"):
+		pool1 = tf.nn.max_pool(relu1, ksize = [1,2,2,1], strides=[1,2,2,1], padding="SAME")
+
+	with tf.variable_scope("layer3-conv2"):
+		conv2_weights = get_weight_variable([CONV2_SIZE, CONV2_SIZE, CONV1_DEEP, CONV2_DEEP], regularizer)
+		conv2_biases = get_bias_variable([CONV2_DEEP])
+		conv2 = tf.nn.conv2d(pool1, conv2_weights, strides=[1, 1, 1, 1], padding='SAME')
+		relu2 = tf.nn.relu(tf.nn.bias_add(conv2, conv2_biases))
+
+	with tf.name_scope("layer4-pool2"):
+		pool2 = tf.nn.max_pool(relu2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+		pool_shape = pool2.get_shape().as_list()
+		nodes = pool_shape[1] * pool_shape[2] * pool_shape[3]
+		reshaped = tf.reshape(pool2, [-1, nodes])
+
+	with tf.variable_scope('layer5-fc1'):
+		fc1_weights = get_weight_variable([nodes, FC_SIZE], regularizer)
+		fc1_biases = get_bias_variable([FC_SIZE])
+		fc1 = tf.nn.relu(tf.matmul(reshaped, fc1_weights) + fc1_biases)
+		# dropout随时将部分节点的输出改为0，避免过拟合，一般仅在全连接层的使用
+		if is_train:
+			fc1 = tf.nn.dropout(fc1, rate=0.5)
+
+	with tf.variable_scope('layer6-fc2'):
+		fc2_weights = get_weight_variable([FC_SIZE, NUM_LABELS], regularizer)
+		fc2_biases = get_bias_variable([NUM_LABELS])
+		logit = tf.matmul(fc1, fc2_weights) + fc2_biases
+
+	return logit
+endsnippet
+
+snippet tf_conv2d_train "tensorflow conv2d train" b
+import tensorflow as tf
+import numpy as np
+import mnist_data
+import forward
+
+IMAGE_SIZE = 28
+NUM_CHANNELS = 1
+OUTPUT_NODE = 10
+
+LEARNING_RATE_BASE = 0.01
+LEARNING_RATE_DECAY = 0.99
+REGULARIZATION_RATE = 0.0001
+MOVING_AVERAGE_DECAY = 0.99
+
+MODEL_DIRECTORY = "model/model.ckpt"
+LOGS_DIRECTORY = "logs/train"
+
+EPOCHS = 5
+BATCH_SIZE = 100
+NUM_LABELS = 10
+
+DISPLAY_STEP = 100
+VALIDATION_STEP = 500
+
+def train():
+	train_total_data, train_size, validation_data, validation_labels, test_data, test_labels = mnist_data.prepare_MNIST_data(False)
+	validation_data = np.reshape(validation_data, (-1, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS))
+
+	x = tf.placeholder(tf.float32, [None, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS], name='x_input')
+	y_ = tf.placeholder(tf.float32, [None, OUTPUT_NODE], name='y_input')
+
+	regularizer = tf.contrib.layers.l2_regularizer(REGULARIZATION_RATE)
+	y = forward.inference(x, True, regularizer)
+
+	global_step = tf.Variable(0, trainable=False)
+
+	ema = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)
+	ema_op = ema.apply(tf.trainable_variables())
+
+	cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=tf.argmax(y_, 1))
+	cross_entropy_mean = tf.reduce_mean(cross_entropy)
+	# Create a summary to monitor loss tensor
+	loss = cross_entropy_mean + tf.add_n(tf.get_collection('losses'))
+	tf.summary.scalar('loss', loss)
+
+	correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+	accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+	# Create a summary to monitor accuracy tensor
+	tf.summary.scalar('acc', accuracy)
+
+	learning_rate = tf.train.exponential_decay(
+		LEARNING_RATE_BASE,
+		global_step,
+		train_size / BATCH_SIZE,
+		LEARNING_RATE_DECAY,
+		staircase=False)
+	# Create a summary to monitor learning_rate tensor
+	tf.summary.scalar('learning_rate', learning_rate)
+
+	# Merge all summaries into a single op
+	merged_summary_op = tf.summary.merge_all()
+
+	train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
+	with tf.control_dependencies([train_step, ema_op]):
+		train_op = tf.no_op(name='train')
+
+	# Add ops to save and restore all the variables
+	saver = tf.train.Saver()
+	with tf.Session() as sess:
+		sess.run(tf.global_variables_initializer())
+
+		# Training cycle
+		total_batch = int(train_size / BATCH_SIZE)
+
+		# op to write logs to Tensorboard
+		summary_writer = tf.summary.FileWriter(LOGS_DIRECTORY, graph=tf.get_default_graph())
+
+		# Save the maximum accuracy value for validation data
+		max_acc = 0.
+
+		# Loop for epoch
+		for epoch in range(EPOCHS):
+
+			# Random shuffling
+			np.random.shuffle(train_total_data)
+			train_data_ = train_total_data[:, :-NUM_LABELS]
+			train_data_ = np.reshape(train_data_, (-1, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS))
+			train_labels_ = train_total_data[:, -NUM_LABELS:]
+
+			# Loop over all batches
+			for i in range(total_batch):
+
+				# Compute the offset of the current minibatch in the data.
+				offset = (i * BATCH_SIZE) % (train_size)
+				batch_xs = train_data_[offset:(offset + BATCH_SIZE), :]
+				batch_ys = train_labels_[offset:(offset + BATCH_SIZE), :]
+
+				# Run optimization op (backprop), loss op (to get loss value)
+				# and summary nodes
+				_, train_accuracy, summary = sess.run([train_op, accuracy, merged_summary_op],
+													  feed_dict={x: batch_xs, y_: batch_ys})
+
+				# Write logs at every iteration
+				summary_writer.add_summary(summary, epoch * total_batch + i)
+
+				# Display logs
+				if i % DISPLAY_STEP == 0:
+					print("Epoch:", '%04d,' % (epoch + 1),
+					"batch_index %4d/%4d, training accuracy %.5f" % (i, total_batch, train_accuracy))
+
+				# Get accuracy for validation data
+				if i % VALIDATION_STEP == 0:
+					# Calculate accuracy
+					validation_accuracy = sess.run(accuracy,
+												   feed_dict={x: validation_data, y_: validation_labels})
+
+					print("Epoch:", '%04d,' % (epoch + 1),
+					"batch_index %4d/%4d, validation accuracy %.5f" % (i, total_batch, validation_accuracy))
+
+				# Save the current model if the maximum accuracy is updated
+				if validation_accuracy > max_acc:
+					max_acc = validation_accuracy
+					save_path = saver.save(sess, MODEL_DIRECTORY)
+					print("Model updated and saved in file: %s" % save_path)
+
+	print("Optimization Finished!")
+
+if __name__ == '__main__':
+	train()
+endsnippet
+
+snippet tf_conv2d_lite "tf_conv2d_lite" b
+def model(x, training, scope='model'):
+	with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
+	x = tf.layers.conv2d(x, 32, 3, activation=tf.nn.relu,
+		  kernel_regularizer=tf.contrib.layers.l2_regularizer(0.04))
+	x = tf.layers.max_pooling2d(x, (2, 2), 1)
+	x = tf.layers.flatten(x)
+	x = tf.layers.dropout(x, 0.1, training=training)
+	x = tf.layers.dense(x, 64, activation=tf.nn.relu)
+	x = tf.layers.batch_normalization(x, training=training)
+	x = tf.layers.dense(x, 10, activation=tf.nn.softmax)
+	return x
+
+train_out = model(train_data, training=True)
+test_out = model(test_data, training=False)
+endsnippet

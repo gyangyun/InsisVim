@@ -1,0 +1,95 @@
+snippet csv_read "csv read" b
+        import csv
+        with open(${1:filepath}) as f:
+        	f_csv = csv.reader(f)
+        	headers = next(f_csv)
+        	for row in f_csv:
+        		${2:# Process row}
+        
+snippet csv_read_dict "csv read dict" b
+        import csv
+        with open(${1:filepath}) as f:
+        	f_csv = csv.DictReader(f)
+        	for row in f_csv:
+        		${2:# Process row}
+        
+snippet csv_read_plus "csv read plus" b
+        from collections import namedtuple
+        import csv
+        with open(${1:filepath}) as f:
+        	f_csv = csv.reader(f)
+        	headings = next(f_csv)
+        	Row = namedtuple('Row', headings)
+        	for r in f_csv:
+        		row = Row(*r)
+        		${2:# Process row}
+        
+snippet csv_read_valueerror "修正列标题带非法标识符的情况" b
+        import re
+        import csv
+        with open(${1:filepath}) as f:
+        	f_csv = csv.reader(f)
+        	headers = [ re.sub('[^a-zA-Z_]', '_', h) for h in next(f_csv) ]
+        	Row = namedtuple('Row', headers)
+        	for r in f_csv:
+        		row = Row(*r)
+        		${2:# Process row}
+        
+snippet csv_read_convert "读取后转换类型" b
+        import csv
+        col_types = [str, float, str, str, float, int]
+        with open(${1:filepath}) as f:
+        	f_csv = csv.reader(f)
+        	headers = next(f_csv)
+        	for row in f_csv:
+        		# Apply conversions to the row items
+        		row = tuple(convert(value) for convert, value in zip(col_types, row))
+        		${2:# Process row}
+        
+snippet csv_read_conversion "Reading as dicts with type conversion" b
+        import csv
+        field_types = [ ('Price', float),
+        				('Change', float),
+        				('Volume', int) ]
+        
+        with open(${1:filepath}) as f:
+        	for row in csv.DictReader(f):
+        		row.update((key, conversion(row[key]))
+        				for key, conversion in field_types)
+        		print(row)
+        
+snippet csv_write "csv write" b
+        import csv
+        headers = ${1:headers}
+        rows = ${2:rows}
+        
+        with open(${3:filepath},'w') as f:
+        	f_csv = csv.writer(f)
+        	f_csv.writerow(headers)
+        	f_csv.writerows(rows)
+        
+snippet csv_write_dict "csv write dict" b
+        import csv
+        headers = ${1:headers}
+        rows = ${2:rows}
+        
+        with open(${3:filepath},'w') as f:
+        	f_csv = csv.DictWriter(f, headers)
+        	f_csv.writeheader()
+        	f_csv.writerows(rows)
+        
+snippet csv_write_plus "csv write dict plus" b
+        import csv
+        headers = ${1:headers}
+        rows = ${2:rows}
+        
+        with open(${3:filepath},'w') as f:
+        	f_csv = csv.DictWriter(f, headers)
+        	f_csv.writeheader()
+        	f_csv.writerows(rows)
+        	for row in rows:
+        		try:
+        			f_csv.writerow(row)
+        		except Exception:
+        			print(f'写入"{row}"时遇错，跳过此行')
+        

@@ -1,0 +1,55 @@
+snippet argv_file "sys.argv" b
+        import os
+        import sys
+        if len(sys.argv) > 1:
+        	${1:filepath} = sys.argv[1]
+        else:
+        	$1 = input("Input $1: ")
+        if os.path.exists($1) == False:
+        	print("Error, input $1 again.")
+        	sys.exit(0)
+        
+snippet getopt "getopt" b
+        import getopt
+        import sys
+        try:
+        	# Short option syntax: 'hv:'
+        	# Long option syntax: 'help' or 'verbose='
+        	opts, args = getopt.getopt(sys.argv[1:], '${1:hv:}', [${2:'help', 'verbose='}])
+        
+        except getopt.GetoptError as err:
+        	# Print debug info
+        	print(str(err))
+        	${3:error_action}
+        
+        for option, argument in opts:
+        	if option in ('-h', '--help'):
+        		${0}
+        		return None
+        	elif option in ('-v', '--verbose'):
+        		verbose = argument
+        
+snippet argparse_auth "authentication argparse"
+        import argparse
+        
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-u', '--username', action='store', help='input username')
+        parser.add_argument('-p', '--password', action='store', help='input password')
+        args = parser.parse_args()
+        
+snippet argparse_io "input and output argparse"
+        import argparse
+        
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-i', '--input',
+        					metavar='IN_FILE',
+        					default='input.txt',
+        					type=argparse.FileType('rt'),
+        					help='input file path')
+        parser.add_argument('-o', '--output',
+        					metavar='OUT_FILE',
+        					default='output.txt',
+        					type=argparse.FileType('at'),
+        					help='output file path')
+        args = parser.parse_args()
+        

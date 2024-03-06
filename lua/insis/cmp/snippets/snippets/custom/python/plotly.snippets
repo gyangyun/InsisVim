@@ -1,0 +1,390 @@
+snippet plotly_import "plotly import" b
+        # Import Plotly
+        import plotly.graph_objs as go
+        import plotly.figure_factory as ff
+        import plotly.offline as py
+        from plotly.subplots import make_subplots
+        # py.init_notebook_mode(connected=True)
+        
+        import plotly.express as px
+        pd.options.plotting.backend = 'plotly'
+        
+        # import plotly.io as pio
+        # pio.templates.default = 'simple_white'
+        
+snippet cf_import "cufflinks import" b
+        import cufflinks as cf
+        # cf.set_config_file(offline=True)
+        
+snippet plotly_axis "plotly axis" b
+        day_axis = dict(
+        	type='date',
+        	tickformat='%Y-%m-%d',
+        	#  dtick=86400000.0 * 3,
+        	#  tickangle=-45,
+        	showgrid=False,
+        	showticklabels=True,
+        	matches=None,
+        )
+        
+        month_axis = dict(
+        	type='date',
+        	tickformat='%Y-%m',
+        	dtick='M1',
+        	showgrid=False,
+        	showticklabels=True,
+        	matches=None,
+        )
+        
+        exponent_axis = dict(
+        	tickformat='e',
+        	showgrid=False,
+        	showticklabels=True,
+        	matches=None,
+        )
+        
+        linear_axis = dict(
+        	type='linear',
+        	tickformat=':.2f',
+        	showgrid=False,
+        	showticklabels=True,
+        	matches=None,
+        )
+        
+        percent_axis = dict(
+        	tickformat='%',
+        	showgrid=False,
+        	showticklabels=True,
+        	matches=None,
+        )
+        
+snippet plotly_title_lite "plotly_title_lite" b
+        	title_text='$0',
+        	title_x=0.5,
+        	titlefont={'size': 24},
+        
+snippet plotly_title "plotly_title" b
+        fig_title = dict(
+        	text='figure',
+        	xref='paper',
+        	x=0.5,
+        	xanchor='center',
+        	# yref='paper',
+        	# y=1,
+        	# yanchor='bottom',
+        	font=dict(
+        		 family='Courier New, monospace',  # 字体 比如宋体
+        		 size=10,   # 标题大小
+        		 color='RebeccaPurple',   # 在此处可以只设置标题的颜色
+        	),
+        )
+        
+        axis_title = dict(
+        	text='axis',  # 标题的文字
+        	font=dict(
+        		 family='Courier New, monospace',  # 字体 比如宋体
+        		 size=10,   # 标题大小
+        		 color='RebeccaPurple',   # 在此处可以只设置标题的颜色
+        	),
+        	standoff=1,  # 设置标题和标签的距离，大于等于0的数字，注意标题是不会超出页边的
+        )
+        
+        
+snippet plotly_annotation "plotly_annotation" b
+        fig_annotation = dict(
+        		xref='paper', yref='paper',
+        		x=0.0, y=1.2,
+        		text='Netflix mostly produce Movies over TV shows.',
+        		font=dict(
+        			family='Arial',
+        			size=16,
+        			color='Black'),
+        		showarrow=False
+        	)
+        
+snippet plotly_hline "plotly_hline" b
+        fig.add_hline(y=1,
+        				line_width=3,
+        				line_dash='dash',
+        				line_color='green',
+        				annotation_text='Jan 1, 2018 baseline',
+        				annotation_position='bottom right',
+        				annotation_font_size=20,
+        				annotation_font_color='blue'
+        				)
+        
+snippet plotly_vline "plotly_vline" b
+        fig.add_vline(x=0.5,
+        				line_width=3,
+        				line_dash='dash',
+        				line_color='green',
+        				annotation_text='Jan 1, 2018 baseline',
+        				annotation_position='bottom right',
+        				annotation_font_size=20,
+        				annotation_font_color='blue'
+        				)
+        
+snippet plotly_hrect "plotly_hrect" b
+        fig.add_hrect(y0=20, y1=25,
+        			annotation_text='decline',
+        			annotation_position='top left',
+        			annotation=dict(font_size=20, font_family='Times New Roman'),
+        			fillcolor='green',
+        			opacity=0.25,
+        			line_width=0)
+        
+snippet plotly_vrect "plotly_vrect" b
+        fig.add_vrect(x0='2018-09-24',
+        			x1='2018-12-18',
+        			annotation_text='decline',
+        			annotation_position='top left',
+        			annotation=dict(font_size=20, font_family='Times New Roman'),
+        			fillcolor='green',
+        			opacity=0.25,
+        			line_width=0)
+        
+        
+snippet plotly_scatter "plotly_scatter" b
+        data = go.Scatter(
+        		x=[1, 2, 3, 4, 5],
+        		y=[6, 8, 7, 8, 6],
+        		name='spline',
+        		text=['tweak', 'line', 'smoothness<br>with', 'smoothing', 'in line object'],
+        		hoverinfo='text+name',
+        		mode='lines+markers',
+        		line=dict(shape='spline', smoothing='2', width=0, color='#849E68'),
+        		marker=dict(color='#444', size=1),
+        	)
+        
+snippet plotly_fig "plotly_fig" b
+        #Create traces
+        trace0 = go.Scatter(x=x0, y=y0, mode='lines', name='左y轴')
+        trace1 = go.Scatter(x=x1, y=y1, mode='lines+markers', name='由y轴', yaxis='y2')
+        
+        data = [trace0, trace1]
+        
+        # go.Layout可以创建图层对象，实现双坐标
+        layout = go.Layout(title='双坐标示例图',
+        			yaxis=dict(title='小数值'),
+        			yaxis2=dict(title='大数值', overlaying='y', side='right'),
+        			legend=dict(x=0, y=1, font=dict(size=12, color='black')))
+        fig = go.Figure(data=data, layout=layout)
+        fig.show()
+        
+snippet my_plot_line "my_plot_line" b
+		fig_title = "趋势图"
+        my_plot(
+        	df=df,
+        	filename=cur_fig_path.joinpath(fig_title),
+        	plot_func=px.line,
+        	x='dsmc',
+        	y='dl_1_pct_change',
+        	color='hyflmc',
+        	labels=dict(
+        		variable='分类',
+        		value='数值',
+        		),
+        	category_orders={'dsmc': dsmc_l, 'hyflmc': qsh_l},
+        	# line_shape='spline',
+        	# traces=dict(
+        		# mode='lines+markers',
+        		# ),
+        	hover_data={'dl_1_pct_change': ':.2%', 'dl': ':.2f', 'dl_1_shift': ':.2f', 'dl_1_diff': ':.2f'},
+        	layout=dict(
+        		title=fig_title,
+        		title_x=0.5,
+        		xaxis=day_axis,
+        		yaxis=exponent_axis,
+        		legend=legend,
+        		#  hovermode='x',
+        		),
+        	)
+        
+        
+snippet my_plot_bar "my_plot_bar" b
+        my_plot(
+        	df=df,
+        	filename=str(cur_material_path / 'qsh/疫情前后各区域一二三产电量对比柱状图.html'),
+        	plot_func=px.bar,
+        	layout=dict(
+        		yaxis=percent_axis,
+        		legend=legend,
+        		),
+        	x='dsmc',
+        	y='dl_1_pct_change',
+        	color='hyflmc',
+        	barmode='group',
+        	labels=dict(
+        		variable='分类',
+        		value='数值',
+        		),
+        	category_orders={'dsmc': dsmc_l, 'hyflmc': qsh_l},
+        	hover_data={'dl_1_pct_change': ':.2%', 'dl': ':.2f', 'dl_1_shift': ':.2f', 'dl_1_diff': ':.2f'},
+        	text='dl_1_pct_change',
+        	traces=dict(
+        		textposition='inside',
+        		texttemplate='%{text:.2%}'
+        		),
+        	layout=dict(
+        		title=f'{sfmc}_{hyflid}',
+        		title_x=0.5,
+        		xaxis=category_axis,
+        		yaxis=exponent_axis,
+        		legend=legend,
+        		#  hovermode='x',
+        		),
+        	)
+        
+        
+snippet my_plot_heatmap "my_plot_heatmap" b
+        fig = my_plot(sub_df.values,
+        	 x=list(sub_df.columns),
+        	 y=list(sub_df.index),
+        	 xgap=0.5,
+        	 ygap=0.5,
+        	 showscale=True,
+        	 annotation_text=sub_df.round(2).values,
+        	 plot_func=ff.create_annotated_heatmap,
+        	 filename=tmp_cur_fig_path.joinpath(f'{tmp_yhmc}_日典型分时电量和分时电价关系热图.html'),
+        	 layout=dict(
+        		title_text=f'{tmp_yhmc}',
+        		title_x=0.5,
+        		titlefont={'size': 24},
+        		#  width=550, height=550,
+        		xaxis_showgrid=False,
+        		#  xaxis={'side': 'bottom'},
+        		yaxis_showgrid=False,
+        		yaxis_autorange='reversed',
+        		paper_bgcolor=None,
+        	))
+        
+        
+snippet my_plot2_line "my_plot2" b
+        my_plot2(
+        	df,
+        	plot_func=px.line,
+        	plot_func2=px.line,
+        	filename=cur_fig_path.joinpath('fig.html'),
+        	x='align_sjsj',
+        	y='dl_1_shift',
+        	color='yhmc',
+        	hover_data=dict(
+        		sjsj_1_shift='|%Y-%m-%d',
+        		),
+        	#  line_shape='spline',
+        	#  traces=dict(
+        		#  mode='markers+lines',
+        		#  ),
+        	x2='align_sjsj',
+        	y2='dl',
+        	color2='yhmc',
+        	hover_data2=dict(
+        		sjsj='|%Y-%m-%d',
+        		),
+        	#  line_shape2='spline',
+        	#  traces2=dict(
+        		#  mode='markers+lines',
+        		#  ),
+        	layout=dict(
+        		title=f'{sfmc}_{hyflid}',
+        		title_x=0.5,
+        		xaxis=day_axis,
+        		yaxis=exponent_axis,
+				yaxis2=linear_axis,
+        		legend=legend,
+        		#  hovermode='x',
+        		),
+        	is_yaxis2=False,
+        	)
+        
+        
+snippet my_split_plot_line "my_split_plot" b
+        my_split_plot(
+        	df,
+        	by_cols=by_cols,
+        	dirpath=cur_fig_path.joinpath(f'{color}_趋势图'),
+        	x='sjsj',
+        	y='dl',
+        	color=color,
+        	line_shape='spline',
+        	traces=dict(
+        		mode='lines+markers',
+        		),
+        	labels=dict(
+        		variable='分类',
+        		value='数值',
+        		),
+        	category_orders=category_orders_d,
+        	layout=dict(
+        		title=f'{sfmc}_{hyflid}',
+        		title_x=0.5,
+        		xaxis=day_axis,
+        		yaxis=exponent_axis,
+        		legend=legend,
+        		#  hovermode='x',
+        		)
+        	)
+        
+snippet my_split_plot2_line "my_split_plot2" b
+        my_split_plot2(
+        	user_dl_compare_df,
+        	by_cols=['sfmc', 'hyflmc'],
+        	plot_func=px.line,
+        	plot_func2=px.line,
+        	dirpath=cur_fig_path.joinpath('各省有序用户2021年、2020年国庆电量对比'),
+        	x='align_sjsj',
+        	y='dl_1_shift',
+        	color='yhmc',
+        	hover_data=dict(
+        		sjsj_1_shift='|%Y-%m-%d',
+        		),
+        	#  line_shape='spline',
+        	#  traces=dict(
+        		#  mode='markers+lines',
+        		#  ),
+        	x2='align_sjsj',
+        	y2='dl',
+        	color2='yhmc',
+        	hover_data2=dict(
+        		sjsj='|%Y-%m-%d',
+        		),
+        	#  line_shape2='spline',
+        	#  traces2=dict(
+        		#  mode='markers+lines',
+        		#  ),
+        	layout=dict(
+        		xaxis=day_axis,
+        		yaxis=exponent_axis,
+        		legend=legend,
+        		#  hovermode='x',
+        		),
+        	is_yaxis2=False,
+        	)
+        
+snippet my_split_plot2_bar "my_split_plot2_bar" b
+        my_split_plot2(
+        		cur_sf_hydl_y_df,
+        		by_cols=by_cols,
+        		dirpath=fig_path.joinpath(f'{color}_当月情况'),
+        		plot_func=px.bar,
+        		plot_func2=px.line,
+        		traces2=dict(
+        			mode='lines+markers',
+        			),
+        		x=color,
+        		y=['dl', 'dl_1_shift', 'dl_12_shift'],
+        		category_orders={'variable': ['dl_12_shift', 'dl_1_shift', 'dl']},
+        		hover_data={'value': ':.2e'},
+        		barmode='group',
+        		x2=color,
+        		y2=['dl_1_pct_change', 'dl_12_pct_change', 'dl_12_pct_change_1_diff'],
+        		category_orders2={'variable': ['dl_12_pct_change', 'dl_1_pct_change', 'dl_12_pct_change_1_diff']},
+        		hover_data2={'value': ':.2%'},
+        		layout=dict(
+        			xaxis=category_axis,
+        			yaxis=exponent_axis,
+        			yaxis2=percent_axis,
+        			legend=legend,
+        			)
+        		)
+        

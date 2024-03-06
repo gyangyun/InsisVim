@@ -111,13 +111,17 @@ if toggleterm and cfg and cfg.enable then
     lazygit:toggle()
   end
 
-  vim.keymap.set({ "n", "t" }, cfg.toggle_float_window, function()
+  vim.keymap.set({ "n", "t" }, cfg.keys.toggle_float_window, function()
     M.toggleA(cfg.toggle_float_window_command)
   end)
-  vim.keymap.set({ "n", "t" }, cfg.toggle_side_window, function()
+  vim.keymap.set({ "n", "t" }, cfg.keys.toggle_side_window, function()
     M.toggleB(cfg.toggle_side_window_command)
   end)
-  vim.keymap.set({ "n", "t" }, cfg.toggle_bottom_window, function()
+  vim.keymap.set({ "n", "t" }, cfg.keys.toggle_bottom_window, function()
     M.toggleC(cfg.toggle_bottom_window_command)
   end)
+
+  vim.keymap.set({ "i", "n" }, cfg.keys.toggle_term_send_current_line, ":ToggleTermSendCurrentLine<CR>")
+  vim.keymap.set({ "v", "x" }, cfg.keys.toggle_term_send_visual_lines, ":ToggleTermSendVisualLine<CR>")
+  vim.keymap.set({ "v", "x" }, cfg.keys.toggle_term_send_visual_selection, ":ToggleTermSendVisualSelection<CR>")
 end

@@ -1,0 +1,226 @@
+snippet pd_import "pandas import" b
+# Import Pandas, Numpy, Scipy
+import pandas as pd
+import numpy as np
+from scipy import stats
+from pandas import DataFrame, Series
+
+# Ignore warnings
+import warnings
+warnings.filterwarnings('ignore')
+
+# Set seed
+np.random.seed(4)
+
+# Set display option
+np.set_printoptions(precision=4, threshold=8, edgeitems=4, linewidth=75, suppress=True, nanstr='nan', infstr='inf')
+pd.set_option('display.float_format',lambda x : '%.4f' % x)
+
+# The garbage collection
+import gc
+gc.enable()
+endsnippet
+
+snippet pd_read_csv "pandas read csv " b
+df = pd.read_csv(${1:'file.csv'})
+endsnippet
+
+snippet pd_read_csv_plus "pandas read csv plus" b
+df = pd.read_csv(${1:'file.csv'}, header=None, index_col=None, names=['${2:filed1}'], quotechar='"', sep=',', na_values = ['na', '-', '.', ''], parse_dates=True, infer_datetime_format=True)
+endsnippet
+
+snippet pd_read_excel_lite "pandas read excel lite" b
+df = pd.read_excel(${1:'file.xlsx'})
+endsnippet
+
+snippet pd_read_excel "pandas read excel" b
+workbook = pd.ExcelFile(${1:'file.xlsx'})
+df = workbook.parse(${2:sheet_name})
+endsnippet
+
+snippet pd_write_excel "pandas write excel" b
+writer = pd.ExcelWriter($1)
+${2:}.to_excel(writer, sheet_name=${3:'sheet1'})
+${4:}.to_excel(writer, sheet_name=${5:'sheet2'})
+
+writer.save()
+endsnippet
+
+snippet pd_read_excel_dict "pandas read excel dict" b
+workbook = pd.ExcelFile(${1:'file.xlsx'})
+d = {}
+for sheet_name in workbook.sheet_names:
+	tmp_df = workbook.parse(sheet_name)
+	d[sheet_name] = tmp_df
+endsnippet
+
+snippet pd_read_excel_list "pandas read excel list" b
+workbook = pd.ExcelFile(${1:'file.xlsx'})
+tmp_df_l = []
+for sheet_name in workbook.sheet_names:
+	tmp_df = workbook.parse(sheet_name)
+	df_l.append(tmp_df)
+df = pd.concat(tmp_df_l, axis=0)
+endsnippet
+
+snippet pd_read_excel_list_plus "pandas read excel list" b
+workbook = pd.ExcelFile(${1:'file.xlsx'})
+tmp_df_l = []
+for i, sheet_name in enumerate(workbook.sheet_names):
+	if i == 0:
+		tmp_df = workbook.parse(sheet_name)
+		tmp_cols = tmp_df.columns
+	else:
+		tmp_df = workbook.parse(sheet_name, header=None, names=tmp_cols)
+	tmp_df_l.append(tmp_df)
+df = pd.concat(tmp_df_l, axis=0)
+endsnippet
+
+snippet pd_read_sql_table "pandas read sql table " b
+import pandas as pd
+df = pd.read_sql_table(${1:table_name}, ${2:con}, index_col=${3:None})
+endsnippet
+
+snippet pd_read_chunks "pandas read chunks" b
+chunks = pd.read_table('aphro.csv', chunksize=1000000, sep=';',\
+			names=['lat','long','rf','date','slno'], index_col='slno',\
+			header=None, parse_dates=['date'])
+df = pd.concat((chunk for chunk in chunks))
+endsnippet
+
+snippet pd_read_dirpath "pandas read dirpath" b
+tmp_dfs = []
+for tmp_fp in ${1:tqdm(data_fps)}:
+	tmp_df = ${2:pd.read_excel}(tmp_fp${0})
+	tmp_dfs.append(tmp_df)
+df = pd.concat(tmp_dfs, axis=0)
+endsnippet
+
+snippet pd_make_dummies "pandas make dummies" b
+def make_dummies(df, features):
+	"""将DateFrame的某列转换成哑变量，并且将原列删除
+
+	:df: 原DataFrame
+	:features: 需要转换成哑变量的features
+	:returns: 无返回值，直接操作原DataFrame
+
+	"""
+	dummies = pd.get_dummies(df[features].astype('category'))
+	for col in dummies.columns:
+		df[col] = dummies[col]
+	for feature in features:
+		del df[feature]
+endsnippet
+
+snippet pd_info_plus "pandas info plus" b
+def info_plus(df):
+	stats = []
+	for col in df.columns:
+		stats.append((col, df[col].nunique(), df[col].isnull().sum() * 100 / df.shape[0], df[col].value_counts(normalize=True, dropna=False).values[0] * 100, df[col].dtype))
+
+	stats_df = pd.DataFrame(stats, columns=['Feature', 'Unique_values', 'Percentage of missing values', 'Percentage of values in the biggest category', 'Dtype'])
+	stats_df.sort_values('Percentage of missing values', ascending=False, inplace=True)
+	return stats_df
+# sns.barplot(x=stats_df['Percentage of missing values'], y=stats_df['Feature'])
+endsnippet
+
+snippet pd_head_plus "pandas head plus" b
+def head_plus(df):
+	for row in zip(df.columns, df.iloc[0, :]):
+		print(row)
+endsnippet
+
+snippet pd_features "pandas features classify" b
+# 查看有空值的列
+null_cols = df.columns[df.isnull().sum(axis=0) != 0]
+print(df.isnull().sum(axis=0).sort_values(ascending=False) / len(df))
+
+# 查看连续数值型变量列
+continuous_cols = df.columns[df.dtypes == np.float]
+# continuous_cols = df.select_dtypes(include=[np.float]).columns
+
+# 查看离散型变量列
+discrete_cols = df.columns[df.dtypes != np.float]
+# continuous_cols = df.select_dtypes(exclude=[np.float]).columns
+
+# 查看离散数值型变量列
+discrete_number_cols = df.columns[df.dtypes == np.int]
+# discrete_number_cols = df.select_dtypes(include=[np.int]).columns
+
+# 查看离散非数值型变量列
+discrete_not_numbe_cols = df.columns[df.dtypes != np.number]
+# discrete_not_numbe_cols = df.select_dtypes(exclude=[np.number]).columns
+endsnippet
+
+snippet pd_describe_plus "pandas describe plus" b
+def describe_plus_continuous_iqr(df):
+	describer = df.describe()
+	q_u = describer.loc['75%']
+	q_l = describer.loc['25%']
+	iqr = q_u - q_l
+	max_limit = q_u + 1.5 * iqr
+	min_limit = q_l - 1.5 * iqr
+	max_limit_out_count = (df > max_limit).sum(0)
+	min_limit_out_count = (df < min_limit).sum(0)
+	limit_out_count = max_limit_out_count + min_limit_out_count
+	max_limit_out_rate = max_limit_out_count / df.shape[0]
+	min_limit_out_rate = min_limit_out_count / df.shape[0]
+	limit_out_rate = max_limit_out_rate + min_limit_out_rate
+	skew = df.skew()
+	kurt = df.kurt()
+
+	describer.loc['iqr'] = iqr
+	describer.loc['max_limit'] = max_limit
+	describer.loc['min_limit'] = min_limit
+	describer.loc['max_limit_out_count'] = max_limit_out_count
+	describer.loc['min_limit_out_count'] = min_limit_out_count
+	describer.loc['limit_out_count'] = limit_out_count
+	describer.loc['max_limit_out_rate'] = max_limit_out_rate
+	describer.loc['min_limit_out_rate'] = min_limit_out_rate
+	describer.loc['limit_out_rate'] = limit_out_rate
+	describer.loc['skew'] = skew
+	describer.loc['kurt'] = kurt
+	return describer
+
+def describe_plus_continuous_normal(df):
+	describer = df.describe()
+	std = describer.loc['std']
+	mean = describer.loc['mean']
+	max_limit = mean + 3 * std
+	min_limit = mean - 3 * std
+	max_limit_out_count = (df > max_limit).sum(0)
+	min_limit_out_count = (df < min_limit).sum(0)
+	limit_out_count = max_limit_out_count + min_limit_out_count
+	max_limit_out_rate = max_limit_out_count / df.shape[0]
+	min_limit_out_rate = min_limit_out_count / df.shape[0]
+	limit_out_rate = max_limit_out_rate + min_limit_out_rate
+	skew = df.skew()
+	kurt = df.kurt()
+
+	describer.loc['max_limit'] = max_limit
+	describer.loc['min_limit'] = min_limit
+	describer.loc['max_limit_out_count'] = max_limit_out_count
+	describer.loc['min_limit_out_count'] = min_limit_out_count
+	describer.loc['limit_out_count'] = limit_out_count
+	describer.loc['max_limit_out_rate'] = max_limit_out_rate
+	describer.loc['min_limit_out_rate'] = min_limit_out_rate
+	describer.loc['limit_out_rate'] = limit_out_rate
+	describer.loc['skew'] = skew
+	describer.loc['kurt'] = kurt
+	return describer
+
+def describe_plus_discrete(df):
+	df = df.astype('category')
+	describer = df.describe()
+	return describer
+endsnippet
+
+
+snippet pd_get_group "pandas get group" b
+sub_df = ${1:gp}.get_group(list($1.groups.keys())[0])
+endsnippet
+
+
+snippet pd_category "pandas category" b
+${1:df}[${2:'sfmc'}] = $1[$2].astype('category').cat.set_categories(${3:sfmc_l})
+endsnippet

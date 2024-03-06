@@ -1,0 +1,10 @@
+snippet bench_parallel "func BenchmarkParallelXYZ(b *testing.B) { ... }"
+func BenchmarkParallel${1:Method}(b *testing.B) {
+	${2}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			${0:${VISUAL}}
+		}
+	})
+}
+endsnippet

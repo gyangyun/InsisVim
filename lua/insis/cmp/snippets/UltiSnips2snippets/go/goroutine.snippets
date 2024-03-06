@@ -1,0 +1,139 @@
+snippet go_max_procs "go max procs" b
+runtime.GOMAXPROCS(runtime.NumCPU())
+endsnippet
+
+snippet wg_init "WaitGroup initate" b
+var wg sync.WaitGroup
+
+${0}
+
+wg.Wait()
+endsnippet
+
+snippet wg_func_init "WaitGroup function initate" b
+func ${1:funcName}(${2}, wg *sync.WaitGroup){
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer func() {
+			if err := recover(); err != nil {
+				debug.PrintStack()
+			}
+		}()
+		${0}
+	}()
+}
+endsnippet
+
+snippet grt_pool_leaky_bucket_equal "goroutine simulate pool.map and the parallelism equal to len(data), leaky bucket" b
+N := len(${1:data})
+
+sem := make(chan bool, N)
+res := make([]${2:string}, N)
+
+for i, ${3:xi} := range $1 {
+	go func (i int, $3 ${4:string}) {
+		defer func() { sem <- true }()
+		defer func() {
+			if err := recover(); err != nil {
+				debug.PrintStack()
+			}
+		}()
+		res[i] = ${5:doSomething}(i, $3)
+		${0}
+	} (i, $3)
+}
+
+for i := 0; i < N; i++ {
+	<- sem
+}
+endsnippet
+
+snippet grt_pool_token_bucket_equal "goroutine simulate pool.map and the parallelism equal to len(data), token_bucket" b
+N := len(${1:data})
+
+sem := make(chan bool, N)
+res := make([]${2:string}, N)
+for i := 0; i < N; i ++ {
+	sem <- true
+}
+
+for i, ${3:xi} := range $1 {
+	<- sem
+	go func (i int, $3 ${4:string}) {
+		defer func() { sem <- true }()
+		defer func() {
+			if err := recover(); err != nil {
+				debug.PrintStack()
+			}
+		}()
+		res[i] = ${5:doSomething}(i, $3)
+		${0}
+	} (i, $3)
+}
+
+for i := 0; i < N; i++ {
+	<- sem
+}
+endsnippet
+
+snippet grt_pool_leaky_bucket "goroutine simulate pool.map and the parallelism less then len(data), token bucket" b
+N := ${1}
+
+sem := make(chan bool, N)
+res := make([]${2:string}, len(${3:data}))
+
+for i, ${4:xi} := range $3 {
+	sem <- true
+	go func (i int, $4 ${5:string}) {
+		defer func() { <- sem }()
+		defer func() {
+			if err := recover(); err != nil {
+				debug.PrintStack()
+			}
+		}()
+		res[i] = ${6:doSomething}(i, $4)
+		${0}
+	} (i, $4)
+}
+
+for i := 0; i < N; i++ {
+	sem <- true
+}
+endsnippet
+
+snippet grt_pool_token_bucket "goroutine simulate pool.map and the parallelism less then len(data), token bucket" b
+N := ${1}
+
+sem := make(chan bool, N)
+res := make([]${2:string}, len(${3:data}))
+for i := 0; i < N; i ++ {
+	sem <- true
+}
+
+for i, ${4:xi} := range $3 {
+	<- sem
+	go func (i int, $4 ${5:string}) {
+		defer func() { sem <- true }()
+		defer func() {
+			if err := recover(); err != nil {
+				debug.PrintStack()
+			}
+		}()
+		res[i] = ${6:doSomething}(i, $4)
+		${0}
+	} (i, $4)
+}
+
+for i := 0; i < N; i++ {
+	<- sem
+}
+endsnippet
+
+snippet grt_mutex "goroutine Mutex" b
+lock := &sync.Mutext{}
+endsnippet
+
+snippet grt_rw_mutex "goroutine RWMutex" b
+lock := &sync.RWMutext{}
+endsnippet

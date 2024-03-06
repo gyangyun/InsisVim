@@ -1,0 +1,89 @@
+snippet flag_init_config "flag initialize config" b
+var configFile string
+
+func initFlag(){
+	flag.StringVar(&configFile, "c", "", "config file.")
+	// 修改提示信息
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "\nUsage: %s <config>\n\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	if flag.NFlag() < 1 {
+		flag.Usage()
+		log.Fatalln("输入参数错误，请参考正确参数格式!")
+	}
+}
+
+func init(){
+	initFlag()
+}
+
+func main(){
+	log.Println("正在加载配置文件...")
+	file, err := os.OpenFile(configFile, os.O_RDONLY, 0666)
+	if err != nil {
+		log.Fatalln("配置文件读取失败，请检查配置文件存放位置及读取权限!\n", err)
+	}
+	defer file.Close()
+
+	var config ${1:model.Config}
+	dec := json.NewDecoder(file)
+	err = dec.Decode(&config)
+	if err != nil {
+		log.Fatalln("配置文件解析失败, 请检查配置文件格式!\n", err)
+	}
+	log.Println("加载配置文件成功！")
+}
+endsnippet
+
+snippet flag_init_global_config "flag initialize global config" b
+package config
+
+type Config struct {
+	LogFilepath   string `json:"log_filepath"`
+	Dialect       string `json:"dialect"`
+	DBPath        string `json:"db_path"`
+	DBLogMode     bool   `json:"db_log_mode"`
+}
+
+var configFile string
+var Cfg Config
+
+func initFlag() {
+	flag.StringVar(&configFile, "c", "", "config file.")
+	// 修改提示信息
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "\nUsage: %s <config>\n\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	if flag.NFlag() < 1 {
+		flag.Usage()
+		log.Fatalln("输入参数错误，请参考正确参数格式!")
+	}
+}
+
+func initConfig() {
+	log.Println("正在加载配置文件...")
+	file, err := os.OpenFile(configFile, os.O_RDONLY, 0666)
+	if err != nil {
+		log.Fatalln("配置文件读取失败，请检查配置文件存放位置及读取权限!\n", err)
+	}
+	defer file.Close()
+
+	dec := json.NewDecoder(file)
+	err = dec.Decode(&Cfg)
+	if err != nil {
+		log.Fatalln("配置文件解析失败, 请检查配置文件格式!\n", err)
+	}
+	log.Println("加载配置文件成功！")
+}
+
+func init() {
+	initFlag()
+	initConfig()
+}
+endsnippet

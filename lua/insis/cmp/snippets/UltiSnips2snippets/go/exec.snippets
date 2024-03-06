@@ -1,0 +1,39 @@
+snippet exec_std "exec by stdin/stdout/stderr" b
+func Executor(s string) error {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return errors.New("you need to pass the something arguments")
+	} else if s == "quit" || s == "exit" {
+		log.Println("Bye!")
+		os.Exit(0)
+	}
+
+	cmd := exec.Command("bash", "-c", s)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
+}
+endsnippet
+
+snippet exec_and_get_result_std "exec and get result by stdin/stdout/stderr" b
+func ExecuteAndGetResult(s string) (string, string, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return "", "", errors.New("you need to pass the something arguments")
+	}
+
+	var stdout, stderr bytes.Buffer
+	cmd := exec.Command("bash", "-c", s)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return "", "", err
+	}
+	return string(stdout.Bytes()), string(stderr.Bytes()), nil
+}
+endsnippet

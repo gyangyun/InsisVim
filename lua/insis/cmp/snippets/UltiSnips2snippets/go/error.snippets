@@ -1,0 +1,26 @@
+snippet err_handle_println "err handle by Pringln" b
+func errHandlePrintln(err error, msg string) {
+	if err != nil {
+		log.Println(msg, err)
+	}
+}
+endsnippet
+
+snippet err_handle_fatalln "err handle by Fatalln" b
+func errHandleFatalln(err error, msg string) {
+	if err != nil {
+		log.Fatalln(msg, err)
+	}
+}
+endsnippet
+
+snippet err_recover "err recover" b
+defer func() {
+	if err := recover(); err != nil {
+		log.Printf("%s \n panic:\n %s", err, debug.Stack())
+		// log.Printf("panic recover! p: %v", p)
+		// debug.PrintStack()
+
+	}
+}()
+endsnippet

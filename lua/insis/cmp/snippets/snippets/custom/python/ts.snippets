@@ -1,0 +1,31 @@
+snippet darts_check_seasonality "darts check_seasonality" b
+        from darts.utils.statistics import plot_acf, plot_pacf, check_seasonality
+        plot_acf(ts, m=7, max_lag=60, alpha=0.05)
+        #  plot_pacf(ts, m=7, max_lag=60, alpha=0.05)
+        
+        for m in range(2, 25):
+        	is_seasonal, period = check_seasonality(ts, m=m, alpha=0.05)
+        	if is_seasonal:
+        		print('There is seasonality of order {}.'.format(period))
+        
+        
+snippet seasonal_decompose "darts seasonal_decompose" b
+        from statsmodels.tsa.seasonal import seasonal_decompose
+        import matplotlib.pyplot as plt
+        
+        decomposition = seasonal_decompose(${1:timeseries}, model='additive', freq=frequence)
+        trend = decomposition.trend
+        seasonal = decomposition.seasonal
+        residual = decomposition.resid
+        
+        from statsmodels.tsa.seasonal import seasonal_decompose
+        # Multiplicative Decomposition
+        # result_mul = seasonal_decompose(df['value'], model='multiplicative', extrapolate_trend='freq')
+        # Additive Decomposition
+        result_add = seasonal_decompose(df['value'], model='additive', extrapolate_trend='freq')
+        
+        # Plot
+        plt.rcParams.update({'figure.figsize': (10,10)})
+        # result_mul.plot().suptitle('Multiplicative Decompose', fontsize=22)
+        result_add.plot().suptitle('Additive Decompose', fontsize=22)
+        plt.show()

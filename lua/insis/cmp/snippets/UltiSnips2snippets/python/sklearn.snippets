@@ -1,0 +1,398 @@
+snippet skl_import "sklearn import" b
+#Common Model Algorithms
+from sklearn import svm, tree, linear_model, neighbors, naive_bayes, ensemble, discriminant_analysis, gaussian_process
+import xgboost as xgb
+import lightgbm as lgb
+import catboost as cb
+
+#Common Model Helpers
+from sklearn import feature_selection
+from sklearn import model_selection
+from sklearn import metrics
+from sklearn import preprocessing
+from sklearn.externals import joblib
+endsnippet
+
+snippet skl_datasets_iris "sklearn datasets iris" b
+from sklearn import datasets
+iris = datasets.load_iris()
+X, y = iris.data, iris.target
+endsnippet
+
+snippet skl_train_test_split "sklearn train_test_split" b
+from sklearn import model_selection
+X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=${1:0.1}, random_state=${2:4}, shuffle=${3:True}, stratify=${4:None})
+endsnippet
+
+snippet skl_train_test_split_plus "sklearn train_test_split_plus" b
+from sklearn import model_selection
+X_cv, X_test, y_cv, y_test = model_selection.train_test_split(X, y, test_size=${1:0.1}, random_state=${2:4}, shuffle=${3:True}, stratify=${4:None})
+X_train, X_val, y_train, y_val = model_selection.train_test_split(X_cv, y_cv, test_size=${1:0.1}, random_state=${2:4}, shuffle=${3:True}, stratify=${4:None})
+endsnippet
+
+snippet skl_skf "sklearn StratifiedKFold"
+from sklearn import model_selection
+skf = model_selection.StratifiedKFold(n_splits=${1:5}, random_state=${2:4}, shuffle=True)
+folds = skf.split(X_train, y_train)
+for i, (train_idx, valid_idx) in enumerate(folds):
+	X_train_folded = X_train.iloc[train_idx]
+	y_train_folded = y_train.iloc[train_idx]
+	X_valid_folded = X_train.iloc[valid_idx]
+	y_valid_folded = y_train.iloc[valid_idx]
+endsnippet
+
+snippet skl_sss "sklearn StratifiedShuffleSplit"
+from sklearn import model_selection
+sss = model_selection.StratifiedShuffleSplit(n_splits=${1:5}, random_state=${2:4}, test_size=${3:.2})
+folds = sss.split(X_train, y_train)
+for i, (train_idx, valid_idx) in enumerate(folds):
+	X_train_folded = X_train[train_idx]
+	y_train_folded = y_train[train_idx]
+	X_valid_folded = X_train[valid_idx]
+	y_valid_folded = y_train[valid_idx]
+endsnippet
+
+snippet skl_kfold "sklearn KFold"
+n_splits = ${1:5}
+random_state = ${2:4}
+shuffle = ${3:True}
+n_classes = ${4:2}
+
+skf = model_selection.StratifiedKFold(n_splits=n_splits, random_state=random_state, shuffle=shuffle)
+folds = skf.split(X_train, y_train)
+
+y_train_pred = np.zeros(X_train.shape[0])
+y_train_pred_proba = np.zeros((X_train.shape[0], n_classes))
+models = np.zeros(n_splits, dtype=object)
+for i, (train_idx, valid_idx) in enumerate(folds):
+	print('The {} fold'.format(i))
+	X_train_folded = X_train.iloc[train_idx]
+	y_train_folded = y_train.iloc[train_idx]
+	X_valid_folded = X_train.iloc[valid_idx]
+	y_valid_folded = y_train.iloc[valid_idx]
+	model = ${5}
+	model.fit(X_train_folded, y_train_folded,
+		categorical_feature=categorical_feature,
+		eval_set=[(X_valid_folded, y_valid_folded)],
+		early_stopping_rounds=40,
+		verbose=10)
+	y_train_pred[valid_idx] = model.predict(X_valid_folded, num_iteration=model.best_iteration_)
+	y_train_pred_proba[valid_idx] = model.predict_proba(X_valid_folded, num_iteration=model.best_iteration_)
+	models[i] = model
+
+y_test_pred_models = np.zeros((X_test.shape[0], len(models)))
+y_test_pred_proba_models = np.zeros((X_test.shape[0], len(models), n_classes))
+feature_importances_models = np.zeros((X_test.shape[1], len(models)))
+for i, model in enumerate(models):
+	y_test_pred_models[:, i] = model.predict(X_test, num_iteration=model.best_iteration_)
+	y_test_pred_proba_models[:, i, :] = model.predict_proba(X_test, num_iteration=model.best_iteration_)
+	feature_importances_models[:, i] = model.feature_importances_
+
+y_test_pred = stats.mode(y_test_pred_models, axis=1)[0][:, 0]
+y_test_pred_proba = np.mean(y_test_pred_proba_models, axis=-2)
+y_test_pred_voting = np.argmax(y_test_pred_proba, axis=-1)
+feature_importances_ = np.mean(feature_importances_models, axis=1)
+${0}
+endsnippet
+
+snippet skl_cross_val_score "sklearn cross_val_score" b
+from sklearn.model_selection import cross_val_score
+scores = cross_val_score(${1:model}, X, y, cv=${2:5}, scoring=${3:'accuracy'})
+print("训练集上的准确率: %0.3f (方差：+/- %0.3f)" % (scores.mean(), scores.std())) #打印交叉验证时得分的均值和方差
+endsnippet
+
+snippet skl_cross_val_score_params "sklearn cross_val_score params"
+from sklearn.model_selection import cross_val_score
+import matplotlib.pyplot as plt
+
+params = ${1:[.1, .3, .5, .7, .9, .99]}
+scores = []
+for param in params:
+	model = ${2:RandomForestClassifier(n_estimators=200, max_features=param, random_state=1)}
+	scores_val = cross_val_score(model, X, y, cv=5, scoring='accuracy')
+	print("[%f] 参数: %0.3f (方差：+/- %0.3f)" % (param, scores_val.mean(), scores_val.std()))
+	scores.append(scores_val.mean())
+
+plt.plot(params, scores)
+plt.title(${4:'Max Features vs CV Error'})
+${0}
+endsnippet
+
+snippet skl_cross_val_score_models "sklearn cross_val_score models"
+from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import VotingClassifier
+
+model1 = LogisticRegression(solver='lbfgs', multi_class='multinomial', random_state=1)
+model2 = RandomForestClassifier(n_estimators=50, random_state=1)
+model3 = GaussianNB()
+model4 = VotingClassifier(estimators=[('lr', model1), ('rf', model2), ('gnb', model3)], voting='hard')
+
+labels = ['LogisticRegression', 'RandomForest', 'NaiveBayes', 'Voting']
+models = [model1, model2, model3, model4]
+scores = []
+
+for label, model in zip(labels, models):
+	scores_val = cross_val_score(model, X, y, cv=5, scoring='accuracy')
+	print("[%s] 准确率: %0.3f (方差：+/- %0.3f)" % (label, scores_val.mean(), scores_val.std()))
+	scores.append(scores_val.mean())
+
+plt.plot(labels, scores)
+plt.title('Best Model vs CV Error')
+${0}
+endsnippet
+
+snippet skl_cross_validate "sklearn cross_validate" b
+from sklearn.model_selection import cross_validate
+scoring = ['accuracy', 'precision_macro', 'recall_macro', 'f1_macro']
+scores = cross_validate(${1:model}, X, y, cv=${2:5}, scoring=scoring, return_train_score=${3:True}, return_estimator=${4:True})
+
+accuracy = np.mean(scores['test_accuracy'])
+precision = np.mean(scores['test_precision'])
+recall = np.mean(scores['test_recall'])
+f1 = np.mean(scores['test_f1'])
+dict(accuracy=accuracy, precision=precision, recall=recall, f1=f1)
+endsnippet
+
+snippet skl_grid_search "sklearn grid search" b
+from lightgbm import LGBMRegressor
+
+cv_params = {
+		'num_leaves': [4, 8, 16, 32],
+		'min_data_in_leaf': [10, 20, 50],
+		'learning_rate': [0.01, 0.1, 0.5],
+		'n_estimators': [50, 100, 200, 400, 600]
+		}
+other_params = {
+		'objective': 'root_mean_squared_error',
+		'verbose': 25,
+		'importance_type': 'gain', #  or split
+		}
+fit_params={
+		'early_stopping_rounds': 25,
+		'eval_metric' : 'root_mean_squared_error',
+		'eval_set' : [(X_val_scaled, y_val_scaled)],
+		'eval_names': ['valid'],
+		}
+
+model = LGBMRegressor(**other_params)
+grid_search = model_selection.GridSearchCV(estimator=model, param_grid=cv_params, scoring='neg_mean_squared_error', cv=5, verbose=1, n_jobs=-1)
+grid_search.fit(X_cv_scaled, y_cv_scaled, **fit_params)
+
+best_score = grid_search.best_score_
+best_params = grid_search.best_params_
+print("Best: %f using %s" % (best_score, best_params))
+
+best_model = grid_search.best_estimator_
+endsnippet
+
+snippet skl_metrics_classify "sklearn metrics classify" b
+from sklearn import metrics
+accuracy_score = metrics.accuracy_score(y_test, y_pred)
+precision_score = metrics.precision_score(y_test, y_pred, average='macro')
+recall_score = metrics.recall_score(y_test, y_pred, average='macro')
+f1_score = metrics.f1_score(y_test, y_pred, average='macro')
+roc_auc_score = metrics.roc_auc_score(y_test, y_pred)
+confusion_matrix = metrics.confusion_matrix(y_test, y_pred)
+classification_report = metrics.classification_report(y_test,y_pred)
+
+print('该模型的accuracy_score是：%f' % accuracy_score)
+print('该模型的precision_score是：%f' % precision_score)
+print('该模型的recall_score是：%f' % recall_score)
+print('该模型的f1_score是：%f' % f1_score)
+print('该模型的roc_auc_score是：%f' % roc_auc_score)
+print('该模型的混淆函数是：\n%s' % confusion_matrix)
+print('该模型的分类报告是：\n%s' % classification_report)
+endsnippet
+
+snippet skl_metrics_classify_plus "sklearn metrics classify plus" b
+def calculate_result(y_true, y_pred, average='macro', simple=False, target_names=None):
+	"""给定y的真实值和与测试，打印并输出：accuracy_score, precision_score, recall_score, F1_score, confusion_matrix, classification_report
+	:y_true: y的真实值
+	:y_pred: y的预测值
+	:average: macro/micro/binary，分别对应 宏平均/微平均/二分类平均（默认参数，只能用于二分类，无法用于多分类）
+	:simple: True/False，是否只简单输出f1值
+	:target_names: 分类报告只需要个别分类时传入
+	:returns: accuracy_score, precision_score, recall_score, F1_score, confusion_matrix, classification_report
+
+	"""
+	f1_score = metrics.f1_score(y_true, y_pred, average=average)
+	if simple:
+		return f1_score
+	else:
+		accuracy_score = metrics.accuracy_score(y_true,y_pred)
+		precision_score = metrics.precision_score(y_true, y_pred, average=average)
+		recall_score = metrics.recall_score(y_true,y_pred, average=average)
+		if target_names:
+			classification_report = metrics.classification_report(y_true, y_pred, target_names=target_names)
+		else:
+			classification_report = metrics.classification_report(y_true, y_pred)
+		confusion_matrix = metrics.confusion_matrix(y_true, y_pred)
+		print('accuracy:', accuracy_score, 'precision:', precision_score, 'recall:', recall_score, 'f1:', f1_score)
+		print('----class report -----:\n', classification_report)
+		print('----confusion matrix-----:\n', confusion_matrix)
+		return accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report
+endsnippet
+
+snippet skl_externals "sklearn externals" b
+import joblib
+joblib.dump(model, ${1:'model.pkl'})
+endsnippet
+
+snippet skl_internals "sklearn internals" b
+import joblib
+model = joblib.load(${1:'model.pkl'})
+endsnippet
+
+snippet skl_tf_idf "sklearn tf idf"
+from sklearn.feature_extraction.text import TfidfVectorizer
+vectorizer_tfidf = TfidfVectorizer()
+X_tfidf_matrix = vectorizer_tfidf.fit_transform(X)
+# print(X_tfidf_matrix)
+print(type(X_tfidf_matrix))
+print(X_tfidf_matrix.shape)
+endsnippet
+
+snippet skl_pca "skl pca"
+from sklearn.decomposition import PCA
+def pca(df, n=10, ratio=0.9):
+	"""pca降维
+	df: 需降维的DataFrame
+	n: 从多少维开始尝试是否达到信息保存百分比
+	ratio: 需保存信息量的百分比
+	return: 降维模型
+	"""
+	pca = PCA()
+	pca.fit(df)
+	while sum(pca.explained_variance_ratio_[0:n])<ratio:
+		n += 1
+	pca_model=PCA(n_components=n)
+	return pca_model.fit_transform(df)
+endsnippet
+
+snippet skl_pre_scaler "sklearn preprocessing scaler"
+from sklearn import preprocessing
+scaler = preprocessing.${1:StandardScaler}()
+$2_scaled = scaler.fit_transform(${2:X})
+endsnippet
+
+snippet skl_pre_scaler_plus "sklearn preprocessing scaler plus"
+from sklearn import preprocessing
+from sklearn.externals import joblib
+
+scaler = preprocessing.${1:StandardScaler}()
+$2_scaled = scaler.fit_transform(${2:X})
+joblib.externalsdump(scaler, ${3:'scaler.pkl'})
+endsnippet
+
+snippet skl_pre_encoder_onehot "sklearn preprocessing onehot encoder"
+from sklearn import preprocessing
+import pandas as pd
+
+encoder = preprocessing.OneHotEncoder(categories='auto')
+$1_encoded = encoder.fit_transform(${1:X}).toarray()
+df_encoded = pd.DataFrame($1_encoded, columns=encoder.get_feature_names())
+endsnippet
+
+snippet skl_pre_encoder_plus_onehot "sklearn preprocessing onehot encoder plus"
+from sklearn import preprocessing
+import pandas as pd
+
+encoder = preprocessing.OneHotEncoder(categories='auto')
+$1_encoded = encoder.fit_transform(${1:X}).toarray()
+df_encoded = pd.DataFrame($1_encoded, columns=encoder.get_feature_names())
+joblib.dump(encoder, ${2:'encoder.pkl'})
+endsnippet
+
+snippet skl_pre_encoder "sklearn preprocessing encoder"
+from sklearn import preprocessing
+
+encoder = preprocessing.${1:OrdinalEncoder}()
+$2_encoded = encoder.fit_transform(${2:X})
+endsnippet
+
+snippet skl_pre_encoder_plus "sklearn preprocessing encoder plus"
+from sklearn import preprocessing
+from sklearn.externals import joblib
+
+encoder = preprocessing.${1:OrdinalEncoder}()
+$2_encoded = encoder.fit_transform(${2:X})
+joblib.dump(encoder, ${3:'encoder.pkl'})
+endsnippet
+
+snippet skl_class_weight "sklearn class_weight"
+from sklearn.utils import class_weight
+class_weight_list = class_weight.compute_class_weight('balanced', np.unique(y), y).tolist()
+class_weight_dict = {i: weight for i, weight in enumerate(class_weight_list)}
+endsnippet
+
+snippet skl_run_lgb "sklearn run lightgbm" b
+def run_lgb(X_train, y_train, X_valid, y_val, X_test, params):
+	lgtrain = lgb.Dataset(X_train, label=y_train)
+	lgval = lgb.Dataset(X_valid, label=y_val)
+	evals_result = {}
+	model = lgb.train(params, lgtrain, 5000,
+					valid_sets=[lgtrain, lgval],
+					early_stopping_rounds=100,
+					verbose_eval=150,
+					evals_result=evals_result)
+
+	y_test_pred = np.expm1(model.predict(X_test, num_iteration=model.best_iteration))
+	return y_test_pred, model, evals_result
+
+# 开始训练lightGBM
+params = {
+	"objective" : "regression",
+	"metric" : "rmse",
+	"num_leaves" : 40,
+	"learning_rate" : 0.004,
+	"bagging_fraction" : 0.6,
+	"feature_fraction" : 0.6,
+	"bagging_frequency" : 6,
+	"bagging_seed" : 42,
+	"verbosity" : -1,
+	"seed": 42
+}
+y_test_pred, model, evals_result = run_lgb(X_train, y_train, X_valid, y_val, X_test, params)
+print("XGB模型训练完毕！")
+
+# 查看模型训练后训练集中各特征对预测结果影响程度的重要性
+print("Features Importance(特征重要性)...")
+gain = model.feature_importance('gain')
+featureimp = pd.DataFrame({'feature':model.feature_name(),
+						'split':model.feature_importance('split'),
+						'gain':100 * gain / gain.sum()}).sort_values('gain', ascending=False)
+print(featureimp[:50])
+endsnippet
+
+snippet skl_run_xgb "sklearn run xgboost" b
+def run_xgb(X_train, y_train, X_valid, y_val, X_test, params):
+	tr_data = xgb.DMatrix(X_train, y_train)
+	va_data = xgb.DMatrix(X_valid, y_val)
+
+	watchlist = [(tr_data, 'train'), (va_data, 'valid')]
+
+	model_xgb = xgb.train(params, tr_data, 2000, watchlist, maximize=False, early_stopping_rounds = 100, verbose_eval=100)
+
+	dtest = xgb.DMatrix(X_test)
+	y_test_pred = np.expm1(model_xgb.predict(dtest, ntree_limit=model_xgb.best_ntree_limit))
+
+	return y_test_pred, model_xgb
+
+# Training XGB
+
+params = {'objective': 'reg:linear',
+		'eval_metric': 'rmse',
+		'eta': 0.001,
+		'max_depth': 10,
+		'subsample': 0.6,
+		'colsample_bytree': 0.6,
+		'alpha':0.001,
+		'random_state': 42,
+		'silent': True}
+
+y_test_pred, model_xgb = run_xgb(X_train, y_train, X_valid, y_val, X_test, params)
+print("XGB模型训练完毕！")
+endsnippet

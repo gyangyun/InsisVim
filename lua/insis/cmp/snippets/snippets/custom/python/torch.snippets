@@ -1,0 +1,12 @@
+snippet torch_import "torch import" b
+        import torch
+        import torch.autograd as autograd
+        import torch.nn as nn
+        import torch.nn.functional as F
+        import torch.optim as optim
+        
+        torch.manual_seed(4)
+
+snippet torch_device "torch device" b
+	device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+

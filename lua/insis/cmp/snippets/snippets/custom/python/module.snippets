@@ -1,0 +1,29 @@
+snippet iter_module_files "get all module files" b
+        def _iter_module_files():
+        	for module in sys.modules.values():
+        		filename = getattr(module, '__file__', None)
+        		if filename:
+        			if filename[-4:] in ('.pyc', '.pyo'):
+        				filename = filename[:-1]
+        			yield filename
+        
+snippet iter_module_methods "get all module methods" b
+        def _iter_module_methods(module):
+        	for m in dir(module):
+        		if not (m.startswith("_") or m.endswith("_")):
+        			func = getattr(module, m)
+        			if hasattr(func, "__doc__") and func.__doc__:
+        				print("● {:21s}{}".format(m + "()", func.__doc__.split("\n")[0]))
+        
+snippet import_string "dynamic module import" b
+        def import_string(${1:import_name}):
+        	"""Import a module based on a string.
+        
+        	:param $1: the dotted name for the object to import.
+        	:return: imported object
+        	"""
+        	if '.' in $1:
+        		module, obj = $1.rsplit('.', 1)
+        	else:
+        		return __import__($1)
+        	return getattr(__import__(module, None, None, [obj]), obj)

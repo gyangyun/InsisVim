@@ -1,0 +1,312 @@
+snippet controller_base "controller base" b
+package controller
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/fourth04/restfulbygin/model"
+	"github.com/gin-gonic/gin"
+)
+
+func Post${1}(c *gin.Context) {
+	var ${2} model.$1
+	if err := c.ShouldBind(&$2); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Check if the record exists
+	var old$1 model.$1
+	if !model.DB.Where("${4} = ?", $2.${5}).First(&old$1).RecordNotFound() {
+		// Display error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Record exists"})
+		return
+	}
+
+	// INSERT INTO ${3} (name) VALUES ($2.Name);
+	if err := model.DB.Create(&$2).Error; err != nil {
+		// Display error
+		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"success": $2})
+	return
+
+	// curl -i -X POST -H "Content-Type: application/json" -d "{ \"$2_name\": \"/api/test\", \"$2_label\": \"测试\"}" http://localhost:8080/api/$3
+}
+
+func Get$1s(c *gin.Context) {
+	var $2s []model.$1
+	// SELECT * FROM $3
+	if model.DB.Find(&$2s).RecordNotFound() {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Record not found"})
+		return
+	}
+
+	// Display JSON result
+	c.JSON(http.StatusOK, $2s)
+	return
+
+	// curl -i http://localhost:8080/api/v1/$2s
+}
+
+func Get$1(c *gin.Context) {
+	// Get id $3
+	id := c.Params.ByName("id")
+	var $2 model.$1
+	// SELECT * FROM $3 WHERE id = 1;
+	if model.DB.First(&$2, id).RecordNotFound() {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Record not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, $2)
+	return
+
+	// curl -i http://localhost:8080/api/v1/$3/1
+}
+
+func Update$1(c *gin.Context) {
+	// Get id $3
+	id := c.Params.ByName("id")
+	var old$1 model.$1
+	// SELECT * FROM $3 WHERE id = 1;
+	if model.DB.First(&old$1, id).RecordNotFound() {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Record not found"})
+		return
+	}
+
+	var new$1 model.$1
+	if err := c.ShouldBind(&new$1); err != nil {
+		// Display error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	new$1.ID = old$1.ID
+	new$1.CreatedAt = old$1.CreatedAt
+	if err := model.DB.Save(&new$1).Error; err != nil {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Display modified data in JSON message "success"
+	c.JSON(http.StatusOK, gin.H{"success": new$1})
+	return
+
+	// curl -i -X PUT -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Merlyn\" }" http://localhost:8080/api/v1/$3/1
+}
+
+func Delete$1(c *gin.Context) {
+	// Get id $3
+	id := c.Params.ByName("id")
+	var $2 model.$1
+	// SELECT * FROM $3 WHERE id = 1;
+	if model.DB.First(&$2, id).RecordNotFound() {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Record not found"})
+		return
+	}
+
+	// DELETE FROM $2s WHERE id = $2.ID
+	if err := model.DB.Delete(&$2).Error; err != nil {
+		// Display error
+		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Display JSON result
+	c.JSON(http.StatusOK, gin.H{"success": "Record #" + id + " deleted"})
+	return
+
+	// curl -i -X DELETE http://localhost:8080/api/v1/$3/1
+}
+endsnippet
+
+snippet controller_associate "controller associate" b
+package controller
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/fourth04/restfulbygin/model"
+	"github.com/gin-gonic/gin"
+)
+
+type ${1}Lite struct {
+	$1Name      string `gorm:"TYPE:VARCHAR(100);NOT NULL" binding:"required" form:"$3_name" json:"$3_name"`
+	${2}IDs []uint `form:"$4_ids" json:"$4_ids"`
+}
+
+func Post$1(c *gin.Context) {
+	var ${3}Lite $1Lite
+	if err := c.ShouldBind(&$3Lite); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Check if the record exists
+	var old$1 model.$1
+	if !model.DB.Where("${5} = ?", $3Lite.${6}).First(&old$1).RecordNotFound() {
+		// Display error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Record exists"})
+		return
+	}
+
+	// Check if the associated record exists
+	var ${4}s []*model.$2
+	if err := model.DB.Find(&$4s, $3Lite.$2IDs).Error; err != nil {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	for _, id := range $3Lite.$2IDs {
+		flagContained := false
+		for _, $4 := range $4s {
+			if $4.ID == id {
+				flagContained = true
+			}
+		}
+		if !flagContained {
+			// Display JSON error
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("$4_id #%d not found", id)})
+			return
+		}
+	}
+
+	new$1 := model.$1{
+		$1Name:    $3Lite.$1Name,
+		$2s: $4s,
+	}
+
+	if err := model.DB.Set("gorm:save_associations", false).Create(&new$1).Error; err != nil {
+		// Display error
+		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": new$1})
+	return
+
+	// curl -i -X POST -H "Content-Type: application/json" -d "{ \"$3_name\": \"/api/test\", \"$3_label\": \"测试\"}" http://localhost:8080/api/$3s
+}
+
+func Get$1s(c *gin.Context) {
+	var $3s []model.$1
+	// SELECT * FROM $3s
+	if model.DB.Preload("$2s").Find(&$3s).RecordNotFound() {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Record not found"})
+		return
+	}
+
+	// Display JSON result
+	c.JSON(http.StatusOK, $3s)
+	return
+
+	// curl -i http://localhost:8080/api/v1/$3s
+}
+
+func Get$1(c *gin.Context) {
+	// Get id $3s
+	id := c.Params.ByName("id")
+	var $3 model.$1
+	// SELECT * FROM $3s WHERE id = 1;
+	if model.DB.Preload("$2s").First(&$3, id).RecordNotFound() {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Record not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, $3)
+	return
+
+	// curl -i http://localhost:8080/api/v1/$3s/1
+}
+
+func Update$1(c *gin.Context) {
+	// Get id $3s
+	id := c.Params.ByName("id")
+	var old$1 model.$1
+	// SELECT * FROM $3s WHERE id = 1;
+	if model.DB.Preload("$2s").First(&old$1, id).RecordNotFound() {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Record not found"})
+		return
+	}
+
+	var $3Lite $1Lite
+	if err := c.ShouldBind(&$3Lite); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Check if the associated record exists
+	var $4s []*model.$2
+	if err := model.DB.Find(&$4s, $3Lite.$2IDs).Error; err != nil {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	for _, id := range $3Lite.$2IDs {
+		flagContained := false
+		for _, $4 := range $4s {
+			if $4.ID == id {
+				flagContained = true
+			}
+		}
+		if !flagContained {
+			// Display JSON error
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("$4_id #%d not found", id)})
+			return
+		}
+	}
+
+	old$1.$1Name = $3Lite.$1Name
+	old$1.$2s = $4s
+	old$1.UpdatedAt = time.Now()
+
+	if err := model.DB.Set("gorm:save_associations", false).Save(&old$1).Error; err != nil {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Display modified data in JSON message "success"
+	c.JSON(http.StatusOK, gin.H{"success": old$1})
+	return
+
+	// curl -i -X PUT -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Merlyn\" }" http://localhost:8080/api/v1/$3s/1
+}
+
+func Delete$1(c *gin.Context) {
+	// Get id $3s
+	id := c.Params.ByName("id")
+	var $3 model.$1
+	// SELECT * FROM $3s WHERE id = 1;
+	if model.DB.First(&$3, id).RecordNotFound() {
+		// Display JSON error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Record not found"})
+		return
+	}
+
+	// DELETE FROM $3s WHERE id = $3.ID
+	if err := model.DB.Delete(&$3).Error; err != nil {
+		// Display error
+		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Display JSON result
+	c.JSON(http.StatusOK, gin.H{"success": "Record #" + id + " deleted"})
+	return
+
+	// curl -i -X DELETE http://localhost:8080/api/v1/$3s/1
+}
+endsnippet

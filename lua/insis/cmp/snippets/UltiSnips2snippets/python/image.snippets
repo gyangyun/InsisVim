@@ -1,0 +1,16 @@
+snippet image_open_file "open image from file" b
+from PIL import Image
+image = Image.open(${1:filepath})
+endsnippet
+
+snippet image_open_bytes "open image from bytes" b
+from PIL import Image
+from io import BytesIO
+image = Image.open(BytesIO(${1}))
+endsnippet
+
+snippet image_open_string "open image from string" b
+from PIL import Image
+from io import StringIO
+image = Image.open(StringIO(${1}))
+endsnippet

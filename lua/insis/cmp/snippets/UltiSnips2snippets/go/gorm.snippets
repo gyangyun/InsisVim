@@ -1,0 +1,30 @@
+snippet gorm_global "gorm global variable" b
+package model
+
+import (
+	"github.com/jinzhu/gorm"
+)
+
+var DB *gorm.DB
+endsnippet
+
+snippet gorm_init "gorm init" b
+func initDB() {
+	dbDialect := config.GetString("db_dialect")
+	dbPath := config.GetString("db_path")
+	dbLogMode := config.GetBool("db_log_mode")
+	var err error
+
+	log.Println("正在连接关系型数据库...")
+	model.DB, err = gorm.Open(dbDialect, dbPath)
+	if err != nil {
+		log.Fatalf("连接关系型数据库失败：%s！", err.Error())
+	}
+	log.Println("连接关系型数据库成功！")
+
+	model.DB.LogMode(dbLogMode)
+	model.DB.AutoMigrate(&model.User{}, &model.Role{}, &model.PermissionType{}, &model.Operation{}, &model.Resource{}, &model.Permission{})
+
+	// model.DB.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&User{})
+}
+endsnippet

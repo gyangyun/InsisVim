@@ -1,0 +1,75 @@
+snippet file_exist "check if file exists" b
+import os.path
+if os.path.isfile(${1:filepath}):
+	{0}
+endsnippet
+
+snippet file_check "check if directory exists, if not, make it" b
+import os
+def check_path(filepath):
+	'''
+	检查路径对应的父目录是否存在，不存在则新建父目录
+	'''
+	if filepath.endswith('/'):
+		dirpath = filepath
+	else:
+		dirpath = os.path.dirname(filepath)
+	if not os.path.isdir(dirpath):
+		os.makedirs(dirpath)
+endsnippet
+
+snippet file_ext "extracting extension from filename" b
+import os
+filename, ext = os.path.splitext(os.path.basename(${1:filepath}))
+endsnippet
+
+snippet file_time "get file creation & modification date/times" b
+import os.path, time
+time.ctime(os.path.getmtime(${1:filepath}))
+time.ctime(os.path.getctime(${1:filepath}))
+endsnippet
+
+snippet file_stat "get file size" b
+import os
+statinfo = os.stat(${1:filepath})
+endsnippet
+
+snippet file_walk "recursively walk a directory" b
+import os
+for dirpath, dirnames, filenames in os.walk(${1:"."}, topdown=False):
+	# dirpath 该次遍历的目录的路径名
+	# dirnames 该次遍历的目录下的所有目录名称组成的列表
+	# filenames 该次遍历的目录下的所有文件名称组成的列表
+	print("==========正在遍历目录：[", dirpath, "]==========")
+	# 打印该次遍历的目录下的所有目录的绝对路径
+	for dirname in dirnames:
+		print(os.path.join(dirpath, dirname))
+	# 打印该次遍历的目录下的所有文件的绝对路径
+	for filename in filenames:
+		print(os.path.join(dirpath, filename))
+endsnippet
+
+snippet file_walk_dirnames "recursively walk a directory and list dirnames" b
+import os
+[os.path.join(dirpath, dirname) for dirpath, dirnames, filenames in os.walk(${1:"."}, topdown=False) for dirname in dirnames]
+endsnippet
+
+snippet file_walk_filenames "recursively walk a directory and list filenames" b
+import os
+[os.path.join(dirpath, filename) for dirpath, dirnames, filenames in os.walk(${1:"."}, topdown=False) for filename in filenames]
+endsnippet
+
+snippet with_open "open file with context" b
+with open(${1:file}, '${2:r}') as ${3:f}:
+	${0:pass}
+endsnippet
+
+snippet list_open "transform file to list" b
+lines = [line.strip() for line in open(${0}) if line.strip()]
+endsnippet
+
+snippet pathlib_glob "pathlib glob" b
+data_dp = Path('${1:./data}')
+data_fps = list(data_dp.glob('?*.xls*'))
+data_fps = sorted(data_fps, key=lambda fp: fp.stat()[-2])
+endsnippet

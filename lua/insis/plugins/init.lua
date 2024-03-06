@@ -130,6 +130,7 @@ return {
   -- fidget.nvim
   {
     "j-hui/fidget.nvim",
+    -- fidget准备重新，先固定legacy这个tag的版本，防止破坏性更新
     tag = "legacy",
     config = function()
       require("insis.plugins.fidget")
@@ -160,6 +161,23 @@ return {
     end,
   },
 
+  -- hop
+  {
+    "phaazon/hop.nvim",
+    branch = "v2", -- optional but strongly recommended
+    config = function()
+      -- you can configure Hop the way you like here; see :h hop-config
+      require("insis.plugins.hop")
+    end,
+  },
+
+  -- text-case
+  {
+    "johmsalas/text-case.nvim",
+    config = function()
+      require("insis.plugins.text-case")
+    end,
+  },
   ------------------ Markdown -------------------------------------------------
   {
     "jakewvincent/mkdnflow.nvim",
@@ -180,6 +198,13 @@ return {
     end,
     build = function()
       vim.fn["mkdp#util#install"]()
+    end,
+  },
+  -- mkdnflow.nvim
+  {
+    "ixru/nvim-markdown",
+    config = function()
+      require("insis.plugins.nvim-markdown")
     end,
   },
 
@@ -207,6 +232,23 @@ return {
   { "rafamadriz/friendly-snippets" },
   -- UI improvement
   { "onsails/lspkind-nvim" },
+
+  -- symbols explorer
+  {
+    "stevearc/aerial.nvim",
+    config = function()
+      require("insis.plugins.aerial")
+    end,
+  },
+
+  -- buffer explorer
+  {
+    "j-morano/buffer_manager.nvim",
+    requires = "nvim-lua/plenary.nvim",
+    config = function()
+      require("insis.plugins.buffer_manager")
+    end,
+  },
 
   ------------------ Code formatter -------------------------------------------
 
@@ -287,7 +329,7 @@ return {
   -- go
   { "leoluz/nvim-dap-go" },
 
-  --[[ 
+  --[[
   -- TODO: python not work yet
 
   {

@@ -1,0 +1,45 @@
+snippet signal_exit "signal exit" b
+func main() {
+	c := make(chan os.Signal)
+
+	signal.Notify(c, os.Interrupt, os.Kill)
+	go func() {
+		for s := range c {
+			switch s {
+			case os.Interrupt, os.Kill:
+				fmt.Println("退出进程", s)
+				os.Exit(0)
+			default:
+				fmt.Println("other", s)
+			}
+		}
+	}()
+}
+endsnippet
+
+snippet signal_exit_plus "signal exit plus" b
+
+func ExitFunc() {
+	fmt.Println("开始退出...")
+	fmt.Println("执行清理...")
+	fmt.Println("结束退出...")
+	os.Exit(0)
+}
+
+func main() {
+	c := make(chan os.Signal)
+
+	signal.Notify(c, os.Interrupt, os.Kill)
+	go func() {
+		for s := range c {
+			switch s {
+			case os.Interrupt, os.Kill:
+				fmt.Println("退出进程", s)
+				ExitFunc()
+			default:
+				fmt.Println("other", s)
+			}
+		}
+	}()
+}
+endsnippet

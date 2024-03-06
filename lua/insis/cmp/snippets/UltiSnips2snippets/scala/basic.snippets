@@ -1,0 +1,15 @@
+snippet if3 "ternary conditional operator"
+if(${1:true}) ${1:"true"} else ${1:"true"}
+endsnippet
+
+snippet tryt "try Throwable"
+	try {
+		${1:${VISUAL}}
+	} catch {
+		case e: FileNotFoundException => ${2}
+		case e: IOException => ${3}
+		case e: Throwable => ${4:e.printStackTrace()}
+	} finally {
+		${0}
+	}
+endsnippet

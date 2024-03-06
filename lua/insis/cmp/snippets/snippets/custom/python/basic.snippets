@@ -1,0 +1,89 @@
+snippet not "not None test"
+        if ${1:value} is not None:
+        	${0:pass}
+        
+snippet pprint_g "dump variable"
+        import pprint
+        pprint.pprint(globals())
+        
+snippet if3 "ternary conditional operator"
+        ${2:True} if ${1:True} else ${3:False}
+        
+snippet for_e "accessing the index in for loops" b
+        for ${1:idx}, ${2:val} in enumerate(${3:ints}):
+        	${0:pass}
+        
+snippet exists_l "To check the existence of a local variable" b
+        if ${1:'myVar'} in locals():
+        	${0:pass}
+        
+snippet exists_lo "To check if an object has an attribute" b
+        if locals().has_key(${1:'myVar'})
+        	${0:pass}
+        
+snippet exists_g "To check the existence of a global variable" b
+        if ${1:'myVar'} in globals():
+        	${0:pass}
+        
+snippet exists_gl "To check the existence of a global variable" b
+        if globals().has_key(${1:'myVar'})
+        	${0:pass}
+        
+snippet exists_d "To check the existence of a global variable" b
+        if ${1:'myVar'} in dir():
+        	${0:pass}
+        
+snippet exists_a "To check if an object has an attribute" b
+        if hasattr(${1:obj}, ${2:'attr_name'}):
+        	${0:pass}
+        
+snippet getattr "getattr(..., ...)" b
+        getattr(${1:obj}, ${2:attr})
+        
+snippet setattr "setattr(..., ...)" b
+        setattr(${1:obj}, ${2:attr}, ${3:value})
+        
+snippet hasattr "hasattr(..., ...)" b
+        hasattr(${1:obj}, ${2:attr})
+        
+snippet ipy "import ipython.." b
+        from IPython import embed; embed()
+        
+snippet timestamp "time format" b
+        import time
+        timestamp = time.strftime('%Y%m%d%H%M%S')
+        
+snippet time_delay "time delay" b
+        import time
+        before = time.time()
+        after = time.time()
+        delay = after - before
+        
+snippet lchunk "split a list into evenly sized chunks" b
+        def chunks(${1:l}, ${2:n}):
+        	""" Yield successive n-sized chunks from l.
+        	"""
+        	for i in range(0, len($1), $2):
+        		yield $1[i:i+$2]
+        
+snippet sliding_window "sliding window" b
+        $1_l = []
+        for i in range((len($1) // ${2:window_size}) + 1):
+        	$1_i = $1[i * $2: (i + 1) * $2]
+        	$1_l.append($1_i)
+        
+snippet lsort "sort a list of dictionaries by values of the dictionary"
+        sorted(${1:list_to_be_sorted}, key=lambda k: k['${2:name}'])
+
+snippet os_switch "os switch"
+	import platform
+
+    os_name = platform.system()
+    if os_name == 'Windows':
+        print('您正在使用Windows操作系统。')
+    elif os_name == 'Linux':
+        print('您正在使用Linux操作系统。')
+    elif os_name == 'Darwin':
+        print('您正在使用macOS操作系统。')
+    else:
+        print('无法识别您的操作系统。')

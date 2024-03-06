@@ -1,5 +1,8 @@
-vim.g.encoding = "UTF-8"
+vim.g.encoding = "utf-8"
 vim.o.fileencoding = "utf-8"
+vim.opt.fileencodings = { "utf-8", "ucs-bom", "cp936", "gb18030", "big5", "gb2312", "euc-jp", "euc-kr", "latin1" }
+vim.opt.termencoding = "utf-8" -- 设置Vim所工作的终端terminal的字符编码方式
+
 -- jkhl padding
 vim.o.scrolloff = 8
 vim.o.sidescrolloff = 8
@@ -14,13 +17,13 @@ vim.wo.signcolumn = "yes"
 -- line of reference on right
 -- vim.wo.colorcolumn = "80"
 -- 2 space = 1 tab
-vim.o.tabstop = 2
-vim.bo.tabstop = 2
-vim.o.softtabstop = 2
+vim.o.tabstop = 4
+vim.bo.tabstop = 4
+vim.o.softtabstop = 4
 vim.o.shiftround = true
 -- >> << move
-vim.o.shiftwidth = 2
-vim.bo.shiftwidth = 2
+vim.o.shiftwidth = 4
+vim.bo.shiftwidth = 4
 -- space instead tab
 vim.o.expandtab = true
 vim.bo.expandtab = true
@@ -39,7 +42,7 @@ vim.o.cmdheight = 1
 vim.o.autoread = true
 vim.bo.autoread = true
 -- no wrap for code
-vim.wo.wrap = false
+vim.wo.wrap = true
 vim.o.whichwrap = "<,>,[,]"
 vim.o.hidden = true
 vim.o.mouse = "a"
@@ -76,4 +79,43 @@ vim.opt.clipboard = "unnamedplus"
 -- disable netrw at the very start of your init.lua (strongly advised) nvim-tree
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
-vim.opt.virtualedit = "block"
+
+vim.o.backup = true
+vim.o.swapfile = true
+vim.o.undofile = true
+
+vim.o.undolevels = 1000
+vim.o.undoreload = 10000
+
+local function initialize_directories()
+  -- views/backup/swap/undo等文件默认存放在临时目录——"~/.local/state/nvim中"
+  -- 可能会被清理，更换存放位置
+  local common_dir = vim.fn.stdpath("data")
+
+  local dir_list = {
+    views = "viewdir",
+  }
+
+  if vim.o.backup then
+    dir_list["backup"] = "backupdir"
+  end
+  if vim.o.swapfile then
+    dir_list["swap"] = "directory"
+  end
+  if vim.o.undofile then
+    dir_list["undo"] = "undodir"
+  end
+
+  for dirname, settingname in pairs(dir_list) do
+    local directory = common_dir .. "/" .. dirname .. "/"
+    if vim.fn.mkdir(directory, "p") == 0 then
+      local errormsg = "Warning: Unable to create directory: " .. directory
+      errormsg = errormsg .. "\nTry: mkdir -p " .. directory
+      vim.api.nvim_err_writeln(errormsg)
+    else
+      directory = vim.fn.substitute(directory, " ", "\\ ", "g")
+      vim.cmd("set " .. settingname .. "=" .. directory)
+    end
+  end
+end
+initialize_directories()

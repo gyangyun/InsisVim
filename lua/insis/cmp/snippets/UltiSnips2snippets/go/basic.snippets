@@ -1,0 +1,42 @@
+snippet ifo "if ok" b
+if ${2:value}, ok := ${1:condition}; ok {
+	${0}
+}
+endsnippet
+
+snippet ifen "if error not" b
+if err != nil {
+	${0}
+}
+endsnippet
+
+snippet forx "for slice" b
+for ${2:i}, ${3:value} := range ${1:values} {
+	${0}
+}
+endsnippet
+
+snippet ticker "ticker" b
+ticker := time.NewTicker(${1:updateInterval})
+defer ticker.Stop()
+for {
+	select {
+	case <-ticker.C:
+		${0}
+	default:
+		...
+	}
+}
+endsnippet
+
+snippet pp "print pointer" b
+fmt.Printf("指针变量所指向对象的值为:\t %+v, \t指针变量所指向对象的内存地址为：%p, 指针变量所对应的内存地址为: %p\n", *${1:b}, $1, &$1)
+endsnippet
+
+snippet pv "print pointer" b
+fmt.Printf("%+v\n", ${1:foobar})
+endsnippet
+
+snippet pvd "print variables detail" b
+fmt.Printf("${1:foobar}: %${2:s}\n", $1)
+endsnippet

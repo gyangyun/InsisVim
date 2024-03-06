@@ -1,0 +1,89 @@
+snippet readme "readme"
+# ${1:demo}使用说明
+
+---
+
+[toc]
+
+---
+
+## 一、程序简介
+
+${2:本程序用于xxxx}
+
+## 二、安装方式
+
+### 1. 下载源码进行编译
+
+	go get -u github.com/fourth04/$1
+	进入项目目录
+	go build
+
+### 2. 下载可执行文件安装
+
+- 可执行文件：/home/gopath/src/github.com/fourth04/$1
+- 配置文件：/home/gopath/src/github.com/fourth04/docs/config.json
+- 服务控制脚本文件：/home/gopath/src/github.com/fourth04/$1/scripts/$1.service
+
+## 三、快速使用
+
+### 1. 给程序赋予可执行权限
+
+	chmod u+x $1
+
+### 2. 修改配置文件
+
+配置文件模板存放于：`${1:demo}/docs/config.json`文件，修改相关项即可
+
+	{
+		${3:json_body}
+	}
+
+例如：
+
+	{
+		$3
+	}
+
+### 3. 使用systemctl运行服务
+
+1. 修改服务文件
+
+服务文件存放于：`$1/script/$1.service`文件，修改相关项即可，主要是如下两处：
+
+-   WorkingDirectory=/home/gdgyy
+-   ExecStart=/home/gopath/bin/$1 -c config.json
+
+其中：
+
+-   WorkingDirectory是配置文件所在目录
+-   ExecStart里需要配执行文件所在绝对路径
+
+2. 拷贝服务文件到服务文件目录
+
+	cp $1.service /usr/lib/systemd/system/$1.service
+
+3. 更新systemctl服务脚本列表
+
+	systemctl daemon-reload
+
+4. 启动服务
+
+	systemctl start $1
+
+5. 将服务加入开机启动
+
+	systemctl enable $1
+
+6. 查看服务状态
+
+	systemctl status $1
+
+7. 停止服务
+
+	systemctl stop $1
+
+### 4. 或者使用命令运行服务
+
+	nohup $1 -c config.json &> /dev/null &
+endsnippet

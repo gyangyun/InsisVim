@@ -1,0 +1,20 @@
+snippet binary_search "binary search" b
+// BinarySearch find the index of the input value from the input list, the list must be ascend
+func BinarySearch(lines [][]string, word string) int {
+	low, high := 0, len(lines)-1
+	k, _ := strconv.Atoi(word)
+	for low <= high {
+		m := (low + high) >> 1
+		start, _ := strconv.Atoi(lines[m][0])
+		stop, _ := strconv.Atoi(lines[m][1])
+		if k >= start && k <= stop {
+			return m
+		} else if start > k {
+			high = m - 1
+		} else {
+			low = m + 1
+		}
+	}
+	return -1
+}
+endsnippet

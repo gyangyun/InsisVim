@@ -1,0 +1,52 @@
+snippet json_encoder "json encoder" b
+fileObj, err := os.OpenFile(${1:"output.json"}, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+if err != nil {
+	log.Println(err)
+}
+defer fileObj.Close()
+
+var ${2:foobar} ${3:Foobar}
+enc := json.NewEncoder(fileObj)
+if err := enc.Encode(&$2); err != nil {
+	log.Println("Error in encoding json fileObj")
+}
+endsnippet
+
+snippet json_decoder "json decoder" b
+fileObj, err := os.Open(${1:"input.json"})
+if err != nil {
+	log.Println(err)
+}
+defer fileObj.Close()
+
+var ${2:foobar} ${3:Foobar}
+dec := json.NewDecoder(fileObj)
+if err := dec.Decode(&$2); err != nil {
+	log.Println("Error in decoding json fileObj")
+}
+endsnippet
+
+snippet json_marshal "json.Marshal" b
+js, _ := json.Marshal(${0:Struct})
+endsnippet
+
+snippet json_unmarshal "json.Unmarshal" b
+var f interface{}
+if err := json.Unmarshal(${1:jsonStr}, &f); err != nil {
+	log.Println("Error in encoding jsonObj")
+}
+
+for k, v := range m {
+	switch vv := v.(type) {
+	case string:
+		fmt.Println(k, "is string", vv)
+	case int:
+		fmt.Println(k, "is int", vv)
+	case []interface{}:
+		fmt.Println(k, "is an array:")
+		for i, u := range vv {
+			fmt.Println(i, u)
+		}
+	default:
+		fmt.Println(k, "is of a type I don’t know how to handle")
+endsnippet

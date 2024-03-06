@@ -1,0 +1,62 @@
+snippet log_init_single "log init single" b
+func initLog(){
+	f, err := os.OpenFile("logfile.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalln("配置文件读取失败，请检查配置文件存放位置及读取权限!\n", err)
+	}
+	log.SetOutput(f)
+	log.SetPrefix("[DEBUG]")
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+}
+
+func init(){
+	initLog()
+}
+endsnippet
+
+snippet log_init_multi "log init multi" b
+var (
+	Info *log.Logger
+	Warning *log.Logger
+	Error * log.Logger
+)
+
+func initLog(){
+	errFile, err:=os.OpenFile("errors.log",os.O_CREATE|os.O_WRONLY|os.O_APPEND,0666)
+	if err!=nil{
+		log.Fatalln("配置文件读取失败，请检查配置文件存放位置及读取权限!\n", err)
+	}
+	Info = log.New(os.Stdout,"Info:",log.Ldate | log.Ltime | log.Lshortfile)
+	Warning = log.New(os.Stdout,"Warning:",log.Ldate | log.Ltime | log.Lshortfile)
+	Error = log.New(io.MultiWriter(os.Stderr,errFile),"Error:",log.Ldate | log.Ltime | log.Lshortfile)
+}
+
+func init(){
+	initLog()
+}
+endsnippet
+
+
+snippet log_init_lumberjack "log init lumberjack" b
+func initLog(){
+	log.SetOutput(&lumberjack.Logger{
+		Filename:   "/var/log/mylogfile.log",
+		MaxSize:    50,
+		MaxBackups: 3,
+		MaxAge:     28,
+		Compress:   true,
+	})
+	log.SetPrefix("[DEBUG]")
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+}
+
+func init(){
+	initLog()
+}
+endsnippet
+
+snippet log_withfields "log fields"
+log.WithFields(log.Fields{
+	"err":     err,
+}).${1:Info}("${2}")
+endsnippet

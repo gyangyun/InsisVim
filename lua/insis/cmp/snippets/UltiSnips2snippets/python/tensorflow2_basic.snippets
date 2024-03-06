@@ -1,0 +1,206 @@
+snippet tf_import "tensorflow import" b
+#  %tensorflow_version 2.x
+import tensorflow as tf
+from tensorflow import keras
+import numpy as np
+
+np.random.seed(4)
+tf.random.set_seed(4)
+
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.models import load_model, clone_model
+from tensorflow.keras.layers import Dense, Flatten, InputLayer, Input
+from tensorflow.keras.layers import Conv2D, GlobalAveragePooling2D, MaxPool2D, AveragePooling2D, SpatialDropout2D
+from tensorflow.keras.layers import Conv1D, GlobalAveragePooling1D, MaxPool1D, AveragePooling1D, SpatialDropout1D
+from tensorflow.keras.layers import SimpleRNN, LSTM, GRU, Bidirectional
+from tensorflow.keras.layers import Embedding
+from tensorflow.keras.layers import Dropout, BatchNormalization
+from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import ELU, LeakyReLU, PReLU, ReLU, Softmax
+from tensorflow.keras.layers import add, average, concatenate, dot, maximum, minimum, multiply, subtract
+from tensorflow.keras.regularizers import l1, l2
+from tensorflow.keras.optimizers import SGD, RMSprop, Adagrad, Adadelta, Adam, Adamax, Nadam
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+from tensorflow.keras.datasets import mnist, fashion_mnist
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+endsnippet
+
+snippet tf_callbacks "tensorflow callbacks" b
+import os
+from datetime import datetime
+def get_callbacks(root_logdir='my_logs'):
+	run_id = datetime.now().strftime("run_%Y%m%d_%H%M%S")
+	run_logdir = os.path.join(root_logdir, run_id)
+	early_stopping_cb = keras.callbacks.EarlyStopping(patience=${2:10}, monitor='${1:val_loss}', restore_best_weights=True)
+	checkpoint_cb = keras.callbacks.ModelCheckpoint(os.path.join(run_logdir, 'model_{epoch:02d}_{$1:.4f}.hdf5'),
+														monitor='$1',
+														mode='max',
+														verbose=5,
+														save_freq='epoch',
+														save_best_only=True,
+														save_weights_only=False)
+	tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
+
+	# def step_decay(epoch):
+		# lr = 0.001
+		# if(epoch >= 100):
+			# lr/=5
+		# if(epoch>=140):
+			# lr/=2
+		# return lr
+	# lr_decay_cb = keras.callbacks.LearningRateScheduler(step_decay)
+	lr_decay_cb = keras.callbacks.ReduceLROnPlateau(factor=0.1, patience=${3:5})
+	callbacks = [early_stopping_cb, checkpoint_cb, tensorboard_cb, lr_decay_cb]
+	return callbacks
+endsnippet
+
+snippet tf_optimizer "tensorflow optimizer" b
+initial_learning_rate = 0.001
+lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate,
+														 decay_steps=10000,
+														 decay_rate=0.96,
+														 staircase=True)
+optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
+endsnippet
+
+snippet tf_sequential "tensorflow sequentical" b
+def add_hidden_sequential(model, n_hidden=1, n_units=30, activation='relu', kernel_initializer='glorot_uniform'):
+	for _ in range(n_hidden):
+		model.add(keras.layers.Dense(units=n_units, activation=activation, kernel_initializer=kernel_initializer))
+	return model
+
+def build_model_sequential(input_shape, output_shape, n_hidden=1, n_units=30, activation='relu', kernel_initializer='glorot_uniform', optimizer='adam'):
+	model = keras.models.Sequential()
+	if len(input_shape) > 1:
+		model.add(keras.layers.Flatten(input_shape=input_shape))
+	else:
+		model.add(keras.layers.InputLayer(input_shape=input_shape))
+	model = add_hidden_sequential(model, n_hidden, n_units, activation, kernel_initializer)
+	if output_shape > 1:
+		model.add(keras.layers.Dense(output_shape, 'softmax'))
+	else:
+		model.add(keras.layers.Dense(output_shape, 'sigmoid'))
+	model.compile(optimizer=optimizer,
+			loss='sparse_categorical_crossentropy',
+			metrics=['accuracy'])
+	return model
+endsnippet
+
+snippet tf_functional "tensorflow functional" b
+def add_hidden_functional(layer, n_hidden=1, n_units=30, activation='relu', kernel_initializer='glorot_uniform'):
+	for _ in range(n_hidden):
+		layer = keras.layers.Dense(units=n_units, activation=activation, kernel_initializer=kernel_initializer)(layer)
+	return layer
+
+def build_model_functional(input_shape, output_shape, n_hidden=1, n_units=30, activation='relu', kernel_initializer='glorot_uniform', optimizer='adam'):
+	input_ = keras.layers.Input(shape=input_shape)
+	if len(input_shape) > 1:
+		hidden = keras.layers.Flatten(input_shape=input_shape)(input_)
+	else:
+		hidden = input_
+	hidden = add_hidden_functional(hidden, n_hidden, n_units, activation, kernel_initializer)
+	if output_shape > 1:
+		output = keras.layers.Dense(output_shape, 'softmax')(hidden)
+	else:
+		output = keras.layers.Dense(output_shape, 'sigmoid')(hidden)
+	model = keras.models.Model(inputs=[input_], outputs=[output])
+	model.compile(optimizer=optimizer,
+			loss='sparse_categorical_crossentropy',
+			metrics=['accuracy'])
+	return model
+endsnippet
+
+snippet tf_gridsearch "tensorflow GridSearch" b
+from sklearn import model_selection
+
+param_init = {
+	'input_shape': 10
+	'output_shape': 1
+}
+
+param_distribs = {
+	'n_hidden': [2, 5, 7],
+	'n_units': np.arange(1, 50),
+	'activation': ['selu', 'elu', 'relu'],
+	'kernel_initializer': ['glorot_uniform', 'glorot_normal', 'he_uniform', 'he_normal', 'lecun_uniform', 'lecun_normal'],
+}
+
+keras_clf = keras.wrappers.scikit_learn.KerasClassifier(build_model, **param_init)
+#  keras_reg = keras.wrappers.scikit_learn.KerasRegressor(build_model, **param_init)
+
+gird_search = model_selection.GridSearchCV(keras_clf, param_distribs, n_iter=20, cv=5, verbose=10)
+gird_search.fit(X_train, y_train,
+				 epochs=100,
+				 batch_size=32,
+				 validation_data=(X_valid, y_valid),
+				 callbacks=[keras.callbacks.EarlyStopping(patience=10)])
+
+best_score = grid_search.best_score_
+best_params = grid_search.best_params_
+print("Best: %f using %s" % (best_score, best_params))
+
+best_model = grid_search.best_estimator_
+endsnippet
+
+snippet tf_clone_model "tensorflow clone model" b
+model_old = keras.models.load_model(os.path.join(root_logdir, 'my_keras_model.h5'))
+model_clone = keras.models.clone_model(model_old)
+model_clone.set_weights(model_old.get_weights())
+endsnippet
+
+snippet tf_plt_history_lite "tensorflow plot history lite" b
+import pandas as pd
+import matplotlib.pyplot as plt
+
+pd.DataFrame(history.history).plot(figsize=(8, 5))
+plt.grid(True)
+plt.gca().set_ylim(0, 1) # set the vertical range to [0-1]
+plt.show()
+endsnippet
+
+snippet tf_plt_history "tensorflow plot history" b
+def plot_history(history, f_name=None):
+	epochs = history.epoch
+	sorted_keys = sorted(history.history.keys(), key=lambda x:x.split('_')[-1])
+	length = len(sorted_keys)
+	for i in range(0, length, 2):
+		key1, key2 = sorted_keys[i: i+2]
+		key = key1.split('_')[-1]
+		plt.plot(epochs, history.history[key1], label=key1)
+		plt.plot(epochs, history.history[key2], label=key2)
+		plt.legend()
+		plt.title('%s - %s' % (key1, key2))
+		plt.xlabel('epochs')
+		plt.ylabel(key)
+		if isinstance(f_name, str):
+			plt.savefig('%s_%s.png' % (f_name, key))
+			plt.show()
+endsnippet
+
+snippet tf_plt_history_plus "tensorflow plot history plus" b
+def plot_history_multi(history, f_name=None):
+	epochs = history.epoch
+	# history.history.keys() 类似("acc", "loss", "val_acc", "val_loss")
+	# 如果需要("acc", "val_acc")组合进行画图的话，需要先根据"_"之后的字符串进行排序
+	sorted_keys = sorted(history.history.keys(), key=lambda x:x.split('_')[-1])
+	length = len(sorted_keys)
+	# 每两组key花在一张图上，所以需要除以2
+	fig, axes = plt.subplots(nrows=1, ncols=length//2, figsize = (15, 5))
+	for i in range(0, length, 2):
+		key1, key2 = sorted_keys[i: i+2]
+		key = key1.split('_')[-1]
+		ax = axes[i//2]
+		ax.plot(epochs, history.history[key1], label=key1)
+		ax.plot(epochs, history.history[key2], label=key2)
+		ax.legend()
+		ax.set_title('%s - %s' % (key1, key2))
+		ax.set_xlabel('epochs')
+		ax.set_ylabel(key)
+	if isinstance(f_name, str):
+		fig.savefig('%s.png' % f_name)
+		fig.tight_layout()
+endsnippet

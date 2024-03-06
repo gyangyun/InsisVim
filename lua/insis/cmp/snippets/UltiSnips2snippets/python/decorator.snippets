@@ -1,0 +1,26 @@
+snippet decorator "good decorator" b
+from functools import wraps
+
+def ${1:spam}(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+@$1
+endsnippet
+
+snippet decorator_plus "ultimate decorator" b
+from functools import wraps
+
+def ${1:spam}(${2:free_variable}):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            ${0:do something whith free variable}
+            return func(*args, **kwargs)
+        return wrapper
+     return decorator
+
+@$1
+endsnippet

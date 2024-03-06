@@ -1,0 +1,25 @@
+snippet fun_a "anonymous function"
+(${1}) => {
+	${0}
+}
+endsnippet
+
+snippet fun_a_async "async anonymous function"
+async (${1}) => {
+	${0}
+}
+endsnippet
+
+snippet fun_async "async function"
+async function ${1:function_name} (${2:argument}){
+	${0}
+}
+endsnippet
+
+snippet toString "Object.prototype.toString.call(value)"
+console.log(Object.prototype.toString.call(${1:value}))
+endsnippet
+
+snippet if3 "ternary conditional operator"
+${1:true} ? ${2:"true"} : ${3:"false"}
+endsnippet

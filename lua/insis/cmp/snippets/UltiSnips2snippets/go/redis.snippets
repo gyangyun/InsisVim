@@ -1,0 +1,67 @@
+snippet redis_client "redis client" b
+import (
+	"github.com/go-redis/redis"
+)
+
+// initialize redis connect
+client := redis.NewClient(&redis.Options{
+	Addr:     "127.0.0.1:6379",
+	Password: "",
+	DB:       0,
+})
+defer client.Close()
+
+if _, err := client.Ping().Result(); err != nil {
+	fmt.Printf("Redis Connect Failed!")
+	os.Exit(-1)
+} else {
+	fmt.Println("Redis Connect Succeed!")
+}
+endsnippet
+
+snippet redis_client_by_url "redis client by url" b
+import (
+	"github.com/go-redis/redis"
+)
+
+opt, err := redis.ParseURL(${1:redisURL})
+if err != nil {
+	log.Fatalln("Redis URL格式错误!")
+}
+
+log.Println("正在初始化Redis Connect...")
+redisClient := redis.NewClient(opt)
+defer redisClient.Close()
+
+if _, err := redisClient.Ping().Result(); err != nil {
+	log.Fatalln(("Redis Connect初始化失败!"))
+} else {
+	log.Println("Redis Connect初始化完成!")
+}
+endsnippet
+
+snippet redis_global "redis global variable" b
+package redisclient
+
+import (
+	"github.com/go-redis/redis"
+)
+
+var RedisClient *redis.Client
+endsnippet
+
+snippet redis_init "redis init" b
+func initRedis() {
+	redisURL := config.GetString("redis_url")
+	opt, err := redis.ParseURL(redisURL)
+	if err != nil {
+		log.Fatalln("Redis URL 格式错误!")
+	}
+	log.Println("正在连接内存型数据库...")
+	redisclient.RedisClient = redis.NewClient(opt)
+	if _, err := redisclient.RedisClient.Ping().Result(); err != nil {
+		log.Fatalf("连接内存型数据库失败：%s！", err.Error())
+	}
+	log.Println("连接内存型数据库成功！")
+}
+endsnippet

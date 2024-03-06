@@ -1,0 +1,57 @@
+snippet http_get_lite "requests get" b
+        import requests
+        
+        r = requests.get(${1:url})
+        
+snippet http_get_plus "requests get plus" b
+        import requests
+        
+        url = ${1:url}
+        headers = ${2:headers}
+        r = requests.get(url=url, headers=headers)
+        
+snippet http_get_ultimate "requests get ultimate" b
+        import requests
+        
+        url = ${1:url}
+        headers = ${2:headers}
+        try:
+        	r = requests.get(url, headers=headers, timeout=30)
+        	if r.ok:
+        		${3:rv=r.text}
+        	else:
+        		${4:rv=''}
+        except Exception as e:
+        	rv = ''
+        finally:
+        	return rv
+        
+snippet http_post_lite "requests post" b
+        import requests
+        
+        r = requests.post(url=${1:url}, data=${2:payload})
+        
+snippet http_post_plus "requests post plus" b
+        import requests
+        
+        url = ${1:url}
+        headers = ${2:headers}
+        data = ${3:payload}
+        r = requests.post(url=url, headers=headers, data=payload)
+        
+snippet http_post_ultimate "requests post ultimate" b
+        import requests
+        
+        url = ${1:url}
+        headers = ${2:headers}
+        data = ${3:payload}
+        try:
+        	r = requests.post(url=url, headers=headers, data=payload, timeout=30)
+        	if r.ok:
+        		${4:rv=r.text}
+        	else:
+        		${4:rv=''}
+        except Exception as e:
+        	rv = ''
+        finally:
+        	return rv

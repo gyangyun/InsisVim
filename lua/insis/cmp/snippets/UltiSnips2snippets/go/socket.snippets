@@ -1,0 +1,95 @@
+snippet socket_tcp_client "socket tcp client" b
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+	"net"
+	"time"
+)
+
+func main() {
+	pRemoteTCPAddr, err := net.ResolveTCPAddr("tcp4", ${1:"www.baidu.com:80"})
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		return
+	}
+
+	/* pLocalTCPAddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:7070")
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		return
+	} */
+
+	pTCPConn, err := net.DialTCP("tcp", nil /*pLocalTCPAddr*/, pRemoteTCPAddr)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		return
+	}
+	defer pTCPConn.Close()
+
+	n, err := pTCPConn.Write(${2:[]byte("HEAD / HTTP/1.0\r\n\r\n")})
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		return
+	}
+
+	fmt.Printf("writed: %d\n", n)
+
+	buf, err := ioutil.ReadAll(pTCPConn)
+	r := len(buf)
+	fmt.Printf("%s\n", string(buf[:r]))
+	fmt.Printf("readed: %d\n", r)
+}
+endsnippet
+
+snippet socket_tcp_server_single "socket tcp server single" b
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+	"net"
+	"time"
+)
+
+func main() {
+	pTCPAddr, error := net.ResolveTCPAddr("tcp4", ${1:":7070"})
+	if error != nil {
+		fmt.Printf("Error: %s\n", error.Error())
+		return
+	}
+
+	pTCPListener, error := net.ListenTCP("tcp4", pTCPAddr)
+	if error != nil {
+		fmt.Printf("Error: %s\n", error.Error())
+		return
+	}
+	defer pTCPListener.Close()
+
+	for {
+		pTCPConn, error := pTCPListener.AcceptTCP()
+		if error != nil {
+			fmt.Printf("Error: %s\n", error.Error())
+			continue
+		}
+		go connHandler(pTCPConn)
+	}
+}
+
+func connHandler(conn *net.TCPConn) {
+	defer conn.Close()
+
+	buf, err := ioutil.ReadAll(conn)
+	r := len(buf)
+	fmt.Printf("%s\n", string(buf[:r]))
+	fmt.Printf("readed: %d\n", r)
+
+	n, err := conn.Write(${2:[]byte(time.Now().String() + "\n")})
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		return
+	}
+	fmt.Printf("writed: %d\n", n)
+}
+endsnippet

@@ -1,0 +1,56 @@
+snippet progressbar "progressbar" b
+from __future__ import division
+import math
+import sys
+
+def progressbar(cur, total):
+    percent = '{:.2%}'.format(cur / total)
+    sys.stdout.write('\r')
+    sys.stdout.write("[%-50s] %s" % ('=' * int(math.floor(cur * 50 / total)), percent))
+    sys.stdout.flush()
+endsnippet
+
+snippet progressbar_safe "progressbar" b
+from threading import Lock
+from __future__ import division
+import math
+import sys
+
+CUR_TAG = 0
+lock = Lock()
+
+def progressbar(cur, total):
+	percent = '{:.2%}'.format(cur / total)
+	sys.stdout.write('\r')
+	sys.stdout.write("[%-50s] %s" % ('=' * int(math.floor(cur * 50 / total)), percent))
+	sys.stdout.flush()
+
+def progressbar_safe(total):
+	# 声明CUR_TAG是全局变量，所有的线程都可以对其进行修改
+	global CUR_TAG
+	with lock:
+		CUR_TAG += 1
+		# 输出的时候加上'\r'可以让光标退到当前行的开始处，进而实现显示进度的效果
+		progressbar(CUR_TAG, total)
+endsnippet
+
+snippet progressbar_tqdm_auto "progressbar tqdm auto" b
+from tqdm import tqdm
+for i in tqdm(${1:range(10000)}):
+	${0}
+endsnippet
+
+snippet progressbar_tqdm_manual "progressbar tqdm manual" b
+from tqdm import tqdm
+pbar = tqdm(total=${1:100})
+for i in range(${2:10}):
+	pbar.update(${3:10})
+pbar.close()
+endsnippet
+
+snippet progressbar_tqdm_manual_with "progressbar tqdm manual with" b
+from tqdm import tqdm
+with tqdm(total=${1:100}) as pbar:
+	for i in range(${2:10}):
+		pbar.update(${3:10})
+endsnippet

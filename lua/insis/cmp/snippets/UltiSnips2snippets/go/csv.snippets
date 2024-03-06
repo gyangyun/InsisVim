@@ -1,0 +1,40 @@
+snippet csv_reader "csv reader" b
+func CsvReader(path string) ([][]string, error) {
+	fileObj, err := os.Open(path)
+	if err != nil {
+		return [][]string{}, err
+	}
+	defer fileObj.Close()
+	reader := csv.NewReader(fileObj)
+	var content [][]string
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return [][]string{}, err
+		}
+		content = append(content, record)
+	}
+	return content, nil
+}
+endsnippet
+
+snippet csv_writer "csv writer" b
+func CsvWriter(content [][]string, path string) error {
+	fileObj, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer fileObj.Close()
+
+	fileObj.WriteString("\xEF\xBB\xBF") // 写入UTF-8 BOM
+
+	writer := csv.NewWriter(fileObj)
+	for i := 0; i < len(content); i++ {
+		writer.Write(content[i])
+	}
+	writer.Flush()
+	return nil
+}
+endsnippet

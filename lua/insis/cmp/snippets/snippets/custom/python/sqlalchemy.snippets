@@ -1,0 +1,59 @@
+snippet sqlalchemy_url "sqlalchemy url" b
+        MYSQL_URI = "mysql://${1:username}:${2:password}@${3:127.0.0.1}:${4:3306}/${5:database}?charset=utf8"
+        
+snippet sqlalchemy_base "sqlalchemy declarative base" b
+        from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+        from sqlalchemy.orm import relationship
+        from sqlalchemy.ext.declarative import declarative_base
+        
+        Base = declarative_base()
+        metadata = Base.metadata
+        
+        def to_dict(self):
+        	return {c.name: getattr(self, c.name, None) for c in self.__table__.columns}
+        
+        Base.to_dict = to_dict
+        
+snippet sqlalchemy_engine "sqlalchemy engine" b
+        from sqlalchemy import create_engine
+        from sqlalchemy import select, and_, or_, not_, func, text, bindparam
+        
+        engine = create_engine(${1:MYSQL_URI}, pool_recycle=${2:7200}, pool_size=${3:5}, encoding=${4:'utf-8'})
+        
+snippet sqlalchemy_connection "sqlalchemy connection" b
+        from sqlalchemy import create_engine
+        from sqlalchemy import select, and_, or_, not_, func, text, bindparam
+        
+        engine = create_engine(${1:MYSQL_URI}, pool_recycle=${2:7200}, pool_size=${3:5}, encoding=${4:'utf-8'})
+        with engine.connect() as connection:
+        	with connection.begin() as transaction:
+        		try:
+        			connection.execute(${5})
+        		except:
+        			transaction.rollback()
+        			raise
+        		else:
+        			transaction.commit()
+        
+snippet sqlalchemy_session "sqlalchemy session" b
+        from sqlalchemy import create_engine
+        from sqlalchemy import select, and_, or_, not_, func, text, bindparam
+        from sqlalchemy.orm import sessionmaker
+        
+        engine = create_engine(${1:MYSQL_URI}, pool_recycle=${2:7200}, pool_size=${3:5}, encoding=${4:'utf-8'})
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        try:
+        	session.Query(${5})
+        except:
+        	session.rollback()
+        else:
+        	session.commit()
+        
+snippet sqlalchemy_batch_select "sqlalchemy batch select" b
+        table_name = ${1:'table_name'}
+        limit = ${2:10000}
+        length = engine.execute(f"select count(*) from {table_name}").scalar()
+        for i in range(0, length, limit):
+        	select_str = f"select ${3:id} from {table_name} limit {limit} offset {i}"
+        	rp = engine.execute(select_str)

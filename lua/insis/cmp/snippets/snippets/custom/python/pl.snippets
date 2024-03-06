@@ -1,0 +1,116 @@
+snippet pl_class "pytorch lightning class with docstrings" b
+        from torch import optim, nn, utils, Tensor
+        import torch.nn.functional as F
+        import pytorch_lightning as pl
+
+        class ${1:LMModel}(${2:pl.LightningModule}):
+            def __init__(self, learning_rate$4):
+                self.save_hyperparameters()
+
+                self.l1 = torch.nn.Linear(28 * 28, 10)
+
+            def forward(self, x):
+                # in lightning, forward defines the prediction/inference actions
+                # Note. self(x) will call forward(x)
+                x = torch.relu(self.l1(x.view(x.size(0), -1)))
+                return F.log_softmax(x, dim=1)
+
+            def training_step(self, batch, batch_idx):
+                # training_step defined the train loop.
+                # Note. It is independent of forward
+                x, y = batch
+                logits = self(x)
+                loss = F.nll_loss(logits, y)
+                return loss
+
+            def validation_step(self, batch, batch_idx):
+                # validation_step defined the valildate loop.
+                # Note. It is independent of forward
+                x, y = batch
+                logits = self(x)
+                loss = F.nll_loss(logits, y)
+                preds = torch.argmax(logits, dim=1)
+                self.val_accuracy.update(preds, y)
+
+                # Calling self.log will surface up scalars for you in TensorBoard
+                self.log("val_loss", loss, prog_bar=True)
+                self.log("val_acc", self.val_accuracy, prog_bar=True)
+
+            def test_step(self, batch, batch_idx):
+                # test_step defined the test loop.
+                # Note. It is independent of forward
+                x, y = batch
+                logits = self(x)
+                loss = F.nll_loss(logits, y)
+                preds = torch.argmax(logits, dim=1)
+                self.test_accuracy.update(preds, y)
+
+                # Calling self.log will surface up scalars for you in TensorBoard
+                self.log("test_loss", loss, prog_bar=True)
+                self.log("test_acc", self.test_accuracy, prog_bar=True)
+
+            def configure_optimizers(self):
+                optimizer = optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+                return optimizer
+
+            $0
+
+
+snippet pl_hf_class "pytorch lightning hugging face class with docstrings" b
+        import pytorch_lightning as pl
+        from transformers import (
+            AutoModelForMaskedLM,
+            AutoTokenizer,
+            AutoConfig,
+        )
+        from transformers.optimization import AdamW
+
+        class ${1:LMModel}(${2:pl.LightningModule}):
+            def __init__(self, model_name_or_path, learning_rate, adam_beta1, adam_beta2, adam_epsilon$4):
+                self.save_hyperparameters()
+
+                config = AutoConfig.from_pretrained(model_name_or_path, return_dict=True)
+                self.model = AutoModelForMaskedLM.from_pretrained(model_name_or_path, config=config)
+
+            def forward(self, x):
+                # in lightning, forward defines the prediction/inference actions
+                # Note. self(x) will call forward(x)
+                return self.model(x).logits
+
+            def training_step(self, batch, batch_idx):
+                # training_step defined the train loop.
+                # Note. It is independent of forward
+                loss = self.model(**batch).loss
+                self.log('train_loss', loss, on_epoch=True)
+                return loss
+
+            def validation_step(self, batch, batch_idx):
+                # validation_step defined the valildate loop.
+                # Note. It is independent of forward
+                loss = self.model(**batch).loss
+                self.log('valid_loss', loss, on_step=True, sync_dist=True)
+
+            def test_step(self, batch, batch_idx):
+                # test_step defined the test loop.
+                # Note. It is independent of forward
+                loss = self.model(**batch).loss
+                self.log('test_loss', loss, on_step=True, sync_dist=True)
+
+            def configure_optimizers(self):
+                optimizer = AdamW(self.parameters(),
+                        self.hparams.learning_rate,
+                        betas=(self.hparams.adam_beta1,
+                            self.hparams.adam_beta2),
+                        eps=self.hparams.adam_epsilon,)
+                return optimizer
+
+            @staticmethod
+            def add_model_specific_args(parent_parser):
+                parser = ArgumentParser(parents=[parent_parser], add_help=False)
+                parser.add_argument('--learning_rate', type=float, default=5e-5)
+                parser.add_argument('--adam_beta1', type=float, default=0.9)
+                parser.add_argument('--adam_beta2', type=float, default=0.999)
+                parser.add_argument('--adam_epsilon', type=float, default=1e-8)
+                return parser
+
+            $0

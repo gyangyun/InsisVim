@@ -3,9 +3,9 @@ local opts = {
   capabilities = common.capabilities,
   flags = common.flags,
   on_attach = function(client, bufnr)
-    -- use fixjson to format
-    -- https://github.com/rhysd/fixjson
-    common.disableFormat(client)
+    if cfg and cfg.formatter ~= "jsonls" then
+      common.disableFormat(client)
+    end
     common.keyAttach(bufnr)
   end,
   settings = {

@@ -1,0 +1,291 @@
+snippet dash_import "dash import" b
+import dash
+import dash_table
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output
+endsnippet
+
+snippet dash_basic_vertical "dash basic vertical" b
+data = pd.read_csv('https://cdn.opensource.faculty.ai/old-faithful/data.csv')
+
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+dropdown = dbc.FormGroup(
+	[
+		dbc.Label('Number of bins in histogram (approximate):'),
+		dcc.Dropdown(
+			id='dropdown',
+			options=[{'label': n, 'value': n} for n in [10, 20, 35, 50]],
+			value=20,
+		),
+	]
+)
+
+checklist = dbc.FormGroup(
+	[
+		dbc.Label('Extras:'),
+		dbc.Checklist(
+			id='checklist',
+			options=[
+				{'label': 'Show individual observations', 'value': 'show_ind'},
+				{'label': 'Show density estimate', 'value': 'show_dens'},
+			],
+			value=[],
+			inline=True,
+		),
+	]
+)
+
+
+app.layout = dbc.Container(
+	[
+		html.H1('Old Faithful eruption data'),
+		html.Hr(),
+		dbc.Row(
+			[
+				dbc.Col(dropdown),
+				dbc.Col(checklist, width='auto', align='center'),
+			]
+		),
+		html.Br(),
+		dcc.Graph(id='graph'),
+	],
+	fluid=True, # 是否填充满父元素
+)
+
+
+@app.callback(
+	Output('graph', 'figure'),
+	[Input('dropdown', 'value'), Input('checklist', 'value')],
+)
+def make_graph(dropdown_value, checklist_value):
+	bin_size = (data.eruptions.max() - data.eruptions.min()) / dropdown_value
+	fig = ff.create_distplot(
+		[data.eruptions],
+		['Eruption duration'],
+		bin_size=bin_size,
+		show_curve='show_dens' in checklist_value,
+		show_rug='show_ind' in checklist_value,
+	)
+	fig['layout'].update(
+		{
+			'title': 'Geyser eruption duration',
+			'showlegend': False,
+			'xaxis': {'title': 'Duration (minutes)'},
+			'yaxis': {'title': 'Density'},
+		}
+	)
+	return fig
+
+
+if __name__ == '__main__':
+	app.run_server(debug=True, port=8888)
+endsnippet
+
+
+snippet dash_basic_horizontal "dash basic horizontal" b
+data = pd.read_csv('https://cdn.opensource.faculty.ai/world-phones/data.csv')
+
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+controls = dbc.Card(
+	[
+		dbc.FormGroup(
+			[
+				dbc.Label('Region'),
+				dcc.Dropdown(
+					id='region-selector',
+					options=[
+						{'label': col, 'value': col}
+						for col in data.columns
+						if col != 'Year'
+					],
+					value='S.Amer',
+				),
+			]
+		),
+		html.Hr(),
+		html.P(
+			'Data from AT&T (1961) The World's Telephones.',
+			className='text-muted',
+		),
+	],
+	body=True,
+)
+
+app.layout = dbc.Container(
+	[
+		html.H1('Telephones by region'),
+		html.Hr(),
+		dbc.Row(
+			[
+				dbc.Col(controls, md=4),
+				dbc.Col(dcc.Graph(id='phones-graph'), md=8),
+			],
+			align='center',
+		),
+	],
+	fluid=True, # 是否填充满父元素
+)
+
+
+@app.callback(
+	Output('phones-graph', 'figure'), [Input('region-selector', 'value')]
+)
+def make_graph(region):
+	fig_data = [go.Bar(y=data[region])]
+	fig_layout = {
+		'xaxis': {
+			'tickvals': [i for i in range(7)],
+			'ticktext': data.Year,
+			'title': 'Year',
+		},
+		'yaxis': {'title': 'Number of Telephones'},
+	}
+
+	return go.Figure(data=fig_data, layout=fig_layout)
+
+if __name__ == '__main__':
+	app.run_server(debug=True, port=8888)
+endsnippet
+
+snippet dash_basic_navbar "dash basic navbar" b
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+app.layout = html.Div(
+	[
+		dcc.Location(id='url', refresh=False),
+		dbc.NavbarSimple(
+			children=[
+				dbc.NavLink('Page 1', href='/page-1', id='page-1-link'),
+				dbc.NavLink('Page 2', href='/page-2', id='page-2-link'),
+				dbc.NavLink('Page 3', href='/page-3', id='page-3-link'),
+			],
+			brand='Navbar with active links',
+			color='primary',
+			dark=True,
+		),
+		dbc.Container(id='page-content', className='pt-4'),
+	]
+)
+
+
+# this callback uses the current pathname to set the active state of the
+# corresponding nav link to true, allowing users to tell see page they are on
+@app.callback(
+	[Output(f'page-{i}-link', 'active') for i in range(1, 4)],
+	[Input('url', 'pathname')],
+)
+def toggle_active_links(pathname):
+	if pathname == '/':
+		# Treat page 1 as the homepage / index
+		return True, False, False
+	return [pathname == f'/page-{i}' for i in range(1, 4)]
+
+
+@app.callback(Output('page-content', 'children'), [Input('url', 'pathname')])
+def render_page_content(pathname):
+	if pathname in ['/', '/page-1']:
+		return html.P('This is the content of page 1!')
+	elif pathname == '/page-2':
+		return html.P('This is the content of page 2. Yay!')
+	elif pathname == '/page-3':
+		return html.P('Oh cool, this is page 3!')
+	# If the user tries to reach a different page, return a 404 message
+	return dbc.Jumbotron(
+		[
+			html.H1('404: Not found', className='text-danger'),
+			html.Hr(),
+			html.P(f'The pathname {pathname} was not recognised...'),
+		]
+	)
+
+
+if __name__ == '__main__':
+	app.run_server(port=8888)
+endsnippet
+
+
+snippet dash_basic_sidebar "dash basic sidebar" b
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+# the style arguments for the sidebar. We use position:fixed and a fixed width
+SIDEBAR_STYLE = {
+	'position': 'fixed',
+	'top': 0,
+	'left': 0,
+	'bottom': 0,
+	'width': '16rem',
+	'padding': '2rem 1rem',
+	'background-color': '#f8f9fa',
+}
+
+# the styles for the main content position it to the right of the sidebar and
+# add some padding.
+CONTENT_STYLE = {
+	'margin-left': '18rem',
+	'margin-right': '2rem',
+	'padding': '2rem 1rem',
+}
+
+sidebar = html.Div(
+	[
+		html.H2('Sidebar', className='display-4'),
+		html.Hr(),
+		html.P(
+			'A simple sidebar layout with navigation links', className='lead'
+		),
+		dbc.Nav(
+			[
+				dbc.NavLink('Page 1', href='/page-1', id='page-1-link'),
+				dbc.NavLink('Page 2', href='/page-2', id='page-2-link'),
+				dbc.NavLink('Page 3', href='/page-3', id='page-3-link'),
+			],
+			vertical=True,
+			pills=True,
+		),
+	],
+	style=SIDEBAR_STYLE,
+)
+
+content = html.Div(id='page-content', style=CONTENT_STYLE)
+
+app.layout = html.Div([dcc.Location(id='url', refresh=False), sidebar, content])
+
+
+# this callback uses the current pathname to set the active state of the
+# corresponding nav link to true, allowing users to tell see page they are on
+@app.callback(
+	[Output(f'page-{i}-link', 'active') for i in range(1, 4)],
+	[Input('url', 'pathname')],
+)
+def toggle_active_links(pathname):
+	if pathname == '/':
+		# Treat page 1 as the homepage / index
+		return True, False, False
+	return [pathname == f'/page-{i}' for i in range(1, 4)]
+
+
+@app.callback(Output('page-content', 'children'), [Input('url', 'pathname')])
+def render_page_content(pathname):
+	if pathname in ['/', '/page-1']:
+		return html.P('This is the content of page 1!')
+	elif pathname == '/page-2':
+		return html.P('This is the content of page 2. Yay!')
+	elif pathname == '/page-3':
+		return html.P('Oh cool, this is page 3!')
+	# If the user tries to reach a different page, return a 404 message
+	return dbc.Jumbotron(
+		[
+			html.H1('404: Not found', className='text-danger'),
+			html.Hr(),
+			html.P(f'The pathname {pathname} was not recognised...'),
+		]
+	)
+
+
+if __name__ == '__main__':
+	app.run_server(port=8888)
+endsnippet

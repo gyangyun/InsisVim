@@ -1,0 +1,56 @@
+snippet http_client "http client" b
+// NewAdvancedReq news an advanced request obj
+func NewAdvancedReq(method string, requestURI string, cookies map[string]string, headers map[string]string) *fasthttp.Request {
+	req := &fasthttp.Request{}
+	req.Header.SetMethod(method)
+	if cookies != nil {
+		for k, v := range cookies {
+			req.Header.SetCookie(k, v)
+		}
+	}
+	if headers != nil {
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+	}
+	return req
+}
+
+// DoTimeout does a GET or POST request
+func DoTimeout(client *fasthttp.Client, arg *fasthttp.Args, method string, requestURI string, cookies map[string]string, headers map[string]string, timeout time.Duration) ([]byte, int, error) {
+	req := NewAdvancedReq(method, requestURI, cookies, headers)
+	switch method {
+	case "GET":
+		// 拼接URI
+		requestURI = requestURI + "?" + arg.String()
+	case "POST":
+		arg.WriteTo(req.BodyWriter())
+	}
+	req.SetRequestURI(requestURI)
+
+	resp := &fasthttp.Response{}
+	err := client.DoTimeout(req, resp, timeout)
+
+	return resp.Body(), resp.StatusCode(), err
+}
+
+// DoTimeout does a GET or POST json request
+func DoJsonTimeout(client *fasthttp.Client, bodyjson string, method string, requestURI string, cookies map[string]string, headers map[string]string, timeout time.Duration) ([]byte, int, error) {
+	req := NewAdvancedReq(method, requestURI, cookies, headers)
+	req.SetRequestURI(requestURI)
+
+	req.Header.SetContentType("application/json")
+	req.SetBodyString(bodyjson)
+
+	resp := &fasthttp.Response{}
+
+	err := client.DoTimeout(req, resp, timeout)
+	return resp.Body(), resp.StatusCode(), err
+}
+
+// basicAuth does basic Auth convert
+func BasicAuth(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+endsnippet

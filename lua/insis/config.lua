@@ -1,42 +1,41 @@
 ---@class UserConfig
----@field colorscheme? "tokyonight" | "nord" | "onedark" | "gruvbox" | "nightfox" | "nordfox" | "duskfox" | "dracula" builtin colorscheme
----@field max_highlight_line_count? number disable code hightlight on big file for performance default 10000
----@field enable_imselect? boolean auto switch your input method, default false  ---@see https://github.com/daipeihust/im-select
----@field enable_very_magic_search? boolean enable regexp very magic mode ---@see https://www.youtube.com/watch?v=VjOcINs6QWs
----@field fix_windows_clipboard? boolean fix yank problem on windows WSL2 ---@see  https://stackoverflow.com/questions/44480829/how-to-copy-to-clipboard-in-vim-of-bash-on-windows
----@field keys? Commonkeys common keymappings
----@field s_windows? SWindowConfig enabled by default
----@field s_tab? STabConfig disabled by default
----@field cmp? CMPConfig Completion user config
----@field notify? NotifyConfig nvim-notify plugin user config
----@field nvimTree? NvimTreeConfig nvim-tree plugin user config
----@field bufferLine? BufferLineConfig bufferline.nvim plugin user config
----@field telescope? TelescopeConfig telescope.nvim plugin user config
----@field surround? SurroundConfig nvim-surround plugin user config
----@field venn? VENNConfig venn.nvim plugin user config
----@field zen? ZenConfig zen-mode.nvim plugin user config
----@field comment? CommentConfig Comment.nvim plugin user config
----@field toggleterm? ToggleTermConfig toggleterm.nvim plugin user config
----@field neotest? NeotestConfig neotest plugin user config
----@field lsp? LSPConfig LSP common config
----@field dap? DAPConfig DAP common config
----@field frontend? FrontendConfig Frontend development user config
----@field clangd? ClangdConfig Clangd user config
----@field golang? GolangConfig Golang development user config
----@field lua? LuaConfig Lua development user config
----@field rust? RustConfig Rust development user config
----@field bash? BashConfig sh development user config
----@field python? PythonConfig python development user config
----@field ruby? RubyConfig ruby development user config
----@field json? JsonConfig Json user config
----@field markdown? MarkdownConfig
----@field toml? TomlConfig Toml user config
----@field yaml? YamlConfig Yaml user config
----@field docker? DockerConfig Docker user config
----@field solidity? SolidityConfig
----@field java? JavaConfig
----@field git? GitConfig git user config
----@field mirror? MirrorConfig mirror config
+---@field colorscheme "tokyonight" | "nord" | "onedark" | "gruvbox" | "nightfox" | "nordfox" | "duskfox" | "dracula" builtin colorscheme
+---@field lock_plugin_commit boolean lock plugin commit snapshots by default for stability
+---@field max_highlight_line_count number disable code hightlight on big file for performance default 10000
+---@field enable_imselect boolean auto switch your input method, default false  ---@see https://github.com/daipeihust/im-select
+---@field enable_very_magic_search boolean enable regexp very magic mode ---@see https://www.youtube.com/watch?v=VjOcINs6QWs
+---@field fix_windows_clipboard boolean fix yank problem on windows WSL2 ---@see  https://stackoverflow.com/questions/44480829/how-to-copy-to-clipboard-in-vim-of-bash-on-windows
+---@field keys Commonkeys common keymappings
+---@field s_windows SWindowConfig enabled by default
+---@field s_tab STabConfig disabled by default
+---@field cmp CMPConfig Completion user config
+---@field notify NotifyConfig nvim-notify plugin user config
+---@field nvimTree NvimTreeConfig nvim-tree plugin user config
+---@field bufferLine BufferLineConfig bufferline.nvim plugin user config
+---@field telescope TelescopeConfig telescope.nvim plugin user config
+---@field surround SurroundConfig nvim-surround plugin user config
+---@field venn VENNConfig venn.nvim plugin user config
+---@field zen ZenConfig zen-mode.nvim plugin user config
+---@field comment CommentConfig Comment.nvim plugin user config
+---@field toggleterm ToggleTermConfig toggleterm.nvim plugin user config
+---@field neotest NeotestConfig neotest plugin user config
+---@field lsp LSPConfig LSP common config
+---@field dap DAPConfig DAP common config
+---@field frontend FrontendConfig Frontend development user config
+---@field clangd ClangdConfig Clangd user config
+---@field golang GolangConfig Golang development user config
+---@field lua LuaConfig Lua development user config
+---@field rust RustConfig Rust development user config
+---@field bash BashConfig sh development user config
+---@field python PythonConfig python development user config
+---@field ruby RubyConfig ruby development user config
+---@field json JsonConfig Json user config
+---@field markdown MarkdownConfig
+---@field toml TomlConfig Toml user config
+---@field yaml YamlConfig Yaml user config
+---@field docker DockerConfig Docker user config
+---@field git GitConfig git user config
+---@field mirror MirrorConfig mirror config
 
 local UserConfig = {
 
@@ -48,7 +47,7 @@ local UserConfig = {
 
   ---@class Commonkeys
   keys = {
-    leader_key = " ",
+    leader_key = ",",
     -- quick save / quite
     n_save = "<leader>w", -- :w
     n_force_quit = "<leader>q", -- :qa!
@@ -62,6 +61,8 @@ local UserConfig = {
       close = "zc",
     },
     terminal_to_normal = "<Esc>",
+    back_to_normal = { "<ESC>", "jk", "JK" },
+    back_to_window = "<C-w>",
   },
 
   ---------------------------
@@ -73,11 +74,11 @@ local UserConfig = {
     enable = true,
     keys = {
       -- left / right cycle
-      prev = "<C-h>",
-      next = "<C-l>",
+      prev = { "<A-h>", "[b" },
+      next = { "<A-l>", "]b" },
       -- close current buffer
-      close = "<C-w>",
-      -- close = "<leader>bc",
+      -- close = "<C-w>",
+      close = "<leader>bc",
       -- close all left / right tabs
       close_left = "<leader>bh",
       close_right = "<leader>bl",
@@ -91,23 +92,25 @@ local UserConfig = {
   s_windows = {
     enable = true,
     keys = {
-      split_vertically = "sv",
-      split_horizontally = "sh",
+      split_vertically = "<leader>sv",
+      split_horizontally = "<leader>sh",
       -- close current
-      close = "sc",
+      close = "<leader>sc",
       -- close others
-      close_others = "so",
+      close_others = "<leader>so",
       -- jump between windows
-      jump_left = { "<A-h>", "<leader>h" },
-      jump_right = { "<A-l>", "<leader>l" },
-      jump_up = { "<A-k>", "<leader>k" },
-      jump_down = { "<A-j>", "<leader>j" },
+      jump_left = { "<C-h>", "<leader>h" },
+      jump_right = { "<C-l>", "<leader>l" },
+      jump_up = { "<C-k>", "<leader>k" },
+      jump_down = { "<C-j>", "<leader>j" },
       -- control windows size
-      width_decrease = "s,",
-      width_increase = "s.",
-      height_decrease = "sj",
-      height_increase = "sk",
-      size_equal = "s=",
+      -- width_decrease = "<leader>s,",
+      -- width_increase = "<leader>s.",
+      width_decrease = "<leader>sh",
+      width_increase = "<leader>sl",
+      height_decrease = "<leader>sj",
+      height_increase = "<leader>sk",
+      size_equal = "<leader>s=",
     },
   },
 
@@ -128,7 +131,7 @@ local UserConfig = {
   cmp = {
     enable = true,
     -- enable copilot cmp
-    copilot = false,
+    copilot = true,
     -- run ':Copilot auth' for the first time
     keys = {
       confirm = "<CR>",
@@ -136,13 +139,14 @@ local UserConfig = {
       select_prev_item = "<C-k>",
       scroll_doc_up = "<C-u>",
       scroll_doc_down = "<C-d>",
-      complete = "<A-.>",
-      abort = "<A-,>",
+      complete = "<C-.>",
+      abort = "<C-,>",
       -- luasnip
       snip_jump_next = "<C-l>",
       snip_jump_prev = "<C-h>",
       snip_next_choice = "<C-j>",
       snip_prev_choice = "<C-k>",
+      -- copilot
       copilot_panel = "<leader>cpp",
     },
   },
@@ -162,12 +166,12 @@ local UserConfig = {
   nvimTree = {
     enable = true,
     keys = {
-      toggle = { "<A-m>", "<leader>m" },
+      toggle = { "<C-m>", "<leader>fe" },
       refresh = "R",
       -- open / close --
-      edit = { "o", "<2-LeftMouse>" },
-      close = "<BS>", -- close parent folder
-      system_open = "<CR>",
+      edit = { "<CR>", "<2-LeftMouse>" },
+      close = "<BS>",
+      system_open = "o",
       vsplit = "sv",
       split = "sh",
       tabnew = "st",
@@ -199,10 +203,15 @@ local UserConfig = {
   telescope = {
     enable = true,
     keys = {
-      find_files = { "<C-p>", "ff" },
-      live_grep = "<C-f>",
+      find_files = { "<C-p>", "<leader>ff" },
+      live_grep = { "<C-f>", "<leader>fg" },
+      buffers = { "<leader>fb" },
+      help_tags = { "<leader>fh" },
+      oldfiles = { "<leader>fo" },
       -- super find  "xx" -tmd ---@see telescope-live-grep-args.nvim
-      live_grep_args = "sf",
+      live_grep_args = { "<leader>fa" },
+      -- support aerial
+      find_symbols = { "<leader>fs" },
       -- up and down
       move_selection_next = "<C-j>",
       move_selection_previous = "<C-k>",
@@ -228,7 +237,7 @@ local UserConfig = {
       delete = "ds",
       change = "cs",
       -- visual mode
-      visual = "s",
+      visual = "S",
       visual_line = "gs",
       -- disable
       insert = false,
@@ -272,7 +281,7 @@ local UserConfig = {
     -- visual mode
     opleader = {
       line = "gc",
-      block = "gb",
+      bock = "gb",
     },
   },
 
@@ -280,12 +289,20 @@ local UserConfig = {
   toggleterm = {
     -- enable 3 builtin terminal <leader>t a/b/c
     enable = true,
-    toggle_float_window = "<leader>ta",
-    toggle_float_window_command = nil,
-    toggle_side_window = "<leader>tb",
-    toggle_side_window_command = nil,
-    toggle_bottom_window = "<leader>tc",
-    toggle_bottom_window_command = nil,
+    keys = {
+      toggle_float_window = "<leader>ta",
+      toggle_float_window_command = nil,
+      toggle_side_window = "<leader>tb",
+      toggle_side_window_command = nil,
+      toggle_bottom_window = "<leader>tc",
+      toggle_bottom_window_command = nil,
+      -- toggle_term_send_current_line = "<leader>tsc",
+      -- toggle_term_send_visual_lines = "<leader>tsv",
+      -- toggle_term_send_visual_selection = "<leader>tss",
+      toggle_term_send_current_line = "<leader>tt",
+      toggle_term_send_visual_selection = "<leader>ts",
+      toggle_term_send_visual_lines = "<leader>tl",
+    },
   },
 
   ------------------------------------
@@ -313,6 +330,8 @@ local UserConfig = {
     -- Format the current buffer
     format = "<leader>f",
 
+    -- jumps to the declaration, many servers do not implement this method
+    declaration = false,
     ----- Diagnostic ------
 
     -- Show diagnostics in a floating window.
@@ -354,6 +373,49 @@ local UserConfig = {
     run_dap = "<leader>nd",
     run_stop = "<leader>ns",
     output_open = "<leader>gh",
+  },
+
+  ------------------------------------
+  -- shared Symbol Explorer
+  ------------------------------------
+
+  ---@class AerialConfig
+  aerial = {
+    enable = true,
+    keys = {
+      toggle = { "<leader>se" },
+    },
+  },
+
+  ------------------------------------
+  -- shared buffer Explorer
+  ------------------------------------
+
+  ---@class BufferManagerConfig
+  buffer_manager = {
+    enable = true,
+    keys = {
+      toggle = "<leader>be",
+      search = "<leader>bs",
+    },
+  },
+
+  ------------------------------------
+  -- shared EasyMotion
+  ------------------------------------
+
+  ---@class HopConfig
+  hop = {
+    enable = true,
+  },
+
+  ------------------------------------
+  -- shared TextCase
+  ------------------------------------
+
+  ---@class TextCase
+  text_case = {
+    enable = true,
   },
 
   ------------------------------------
@@ -432,12 +494,12 @@ local UserConfig = {
 
   ---@class PythonConfig
   python = {
-    enable = false,
+    enable = true,
     -- can be pylsp or pyright
     lsp = "pylsp",
     -- pip install black
     -- asdf reshim python
-    formatter = "black",
+    formatter = { "black", "isort" },
     format_on_save = false,
   },
 
@@ -452,17 +514,16 @@ local UserConfig = {
 
   ---@class JsonConfig
   json = {
-    enable = false,
+    enable = true,
     lsp = "jsonls",
-    -- npm install -g fixjson
-    ---@type "fixjson" | "prettier"
-    formatter = "fixjson",
+    ---@type "jsonls" | "prettier"
+    formatter = "jsonls",
     format_on_save = false,
   },
 
   ---@class MarkdownConfig
   markdown = {
-    enable = false,
+    enable = true,
     mkdnflow = {
       next_link = "gn",
       prev_link = "gp",

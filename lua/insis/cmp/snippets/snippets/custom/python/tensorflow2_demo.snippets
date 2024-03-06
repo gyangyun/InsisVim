@@ -1,0 +1,237 @@
+snippet tf_mlp_categorical "tensorflow mlp categorical" b
+        # 生成虚拟数据
+        X_train = np.random.random((1000, 20))
+        y_train = keras.utils.to_categorical(np.random.randint(10, size=(1000, 1)), num_classes=10)
+        X_test = np.random.random((100, 20))
+        y_test = keras.utils.to_categorical(np.random.randint(10, size=(100, 1)), num_classes=10)
+        
+        model = keras.models.Sequential()
+        # keras.layers.Dense(64) 是一个具有 64 个隐藏神经元的全连接层。
+        # 在第一层必须指定所期望的输入数据尺寸：
+        # 在这里，是一个 20 维的向量。
+        model.add(keras.layers.Dense(64, activation='relu', input_shape=(20,)))
+        model.add(keras.layers.Dropout(0.5))
+        model.add(keras.layers.Dense(64, activation='relu'))
+        model.add(keras.layers.Dropout(0.5))
+        model.add(keras.layers.Dense(10, activation='softmax'))
+        
+        sgd = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+        model.compile(loss='categorical_crossentropy',
+        				optimizer=sgd,
+        				metrics=['accuracy'])
+        
+        model.fit(X_train, y_train,
+        			epochs=20,
+        			batch_size=128)
+        loss, acc = model.evaluate(X_test, y_test, batch_size=128)
+        
+snippet tf_mlp_binary "tensorflow mlp binary" b
+        # 生成虚拟数据
+        X_train = np.random.random((1000, 20))
+        y_train = np.random.randint(2, size=(1000, 1))
+        X_test = np.random.random((100, 20))
+        y_test = np.random.randint(2, size=(100, 1))
+        
+        model = keras.models.Sequential()
+        model.add(keras.layers.Dense(64, input_dim=20, activation='relu'))
+        model.add(keras.layers.Dropout(0.5))
+        model.add(keras.layers.Dense(64, activation='relu'))
+        model.add(keras.layers.Dropout(0.5))
+        model.add(keras.layers.Dense(1, activation='sigmoid'))
+        
+        model.compile(loss='binary_crossentropy',
+        			 optimizer='rmsprop',
+        			 metrics=['accuracy'])
+        
+        model.fit(X_train, y_train,
+        		 epochs=20,
+        		 batch_size=128)
+        loss, acc = model.evaluate(X_test, y_test, batch_size=128)
+        
+snippet tf_conv2d "tensorflow conv2d" b
+        # 生成虚拟数据
+        X_train = np.random.random((100, 100, 100, 3))
+        y_train = keras.utils.to_categorical(np.random.randint(10, size=(100, 1)), num_classes=10)
+        X_test = np.random.random((20, 100, 100, 3))
+        y_test = keras.utils.to_categorical(np.random.randint(10, size=(20, 1)), num_classes=10)
+        
+        model = keras.models.Sequential()
+        # 输入: 3 通道 100x100 像素图像 -> (100, 100, 3) 张量。
+        # 使用 32 个大小为 3x3 的卷积滤波器。
+        model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(100, 100, 3)))
+        model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
+        model.add(keras.layers.MaxPool2D((2, 2)))
+        model.add(keras.layers.Dropout(0.25))
+        
+        model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
+        model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
+        model.add(keras.layers.MaxPool2D((2, 2)))
+        model.add(keras.layers.Dropout(0.25))
+        
+        model.add(keras.layers.Flatten())
+        model.add(keras.layers.Dense(256, activation='relu'))
+        model.add(keras.layers.Dropout(0.5))
+        model.add(keras.layers.Dense(10, activation='softmax'))
+        
+        sgd = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+        model.compile(loss='categorical_crossentropy',
+        			 optimizer=sgd,
+        			 metrics=['accuracy'])
+        
+        model.fit(X_train, y_train,
+        		 epochs=10,
+        		 batch_size=20)
+        
+        loss, acc = model.evaluate(X_test, y_test, batch_size=20)
+        
+snippet tf_conv1d "tensorflow conv1d" b
+        # 生成虚拟数据
+        X_train = np.random.randint(0, 1024, size=(1000, 64))
+        y_train = np.random.randint(2, size=(1000, 1))
+        X_test = np.random.randint(0, 1024, size=(100, 64))
+        y_test = np.random.randint(2, size=(100, 1))
+        
+        seq_length = 64
+        max_features = 1024
+        embedding_size = 100
+        
+        model = keras.models.Sequential()
+        
+        model.add(keras.layers.Embedding(max_features, embedding_size))
+        model.add(keras.layers.Conv1D(64, 3, activation='relu', input_shape=(seq_length, embedding_size)))
+        model.add(keras.layers.Conv1D(64, 3, activation='relu'))
+        model.add(keras.layers.MaxPool1D(3))
+        model.add(keras.layers.Conv1D(128, 3, activation='relu'))
+        model.add(keras.layers.Conv1D(128, 3, activation='relu'))
+        model.add(keras.layers.GlobalAveragePooling1D())
+        model.add(keras.layers.Dropout(0.25))
+        model.add(keras.layers.Dense(1, activation='sigmoid'))
+        
+        model.compile(optimizer='rmsprop',
+        			 loss='binary_crossentropy',
+        			 metrics=['accuracy'])
+        
+        model.fit(X_train, y_train, epochs=10, batch_size=16)
+        loss, acc = model.evaluate(X_test, y_test, batch_size=16)
+        
+snippet tf_lstm_single "tensorflow lstm single" b
+        # 生成虚拟数据
+        X_train = np.random.randint(0, 1024, (1000, 30))
+        y_train = np.random.randint(2, size=(1000, 1))
+        X_test = np.random.randint(0, 1024, (100, 30))
+        y_test = np.random.randint(2, size=(10, 1))
+        
+        X_train = keras.preprocessing.sequence.pad_sequences(X_train, maxlen=32, padding='post')
+        X_test = keras.preprocessing.sequence.pad_sequences(X_train, maxlen=32, padding='post')
+        
+        max_featurs = 1024
+        
+        model = keras.models.Sequential()
+        model.add(keras.layers.Embedding(max_featurs, 256))
+        model.add(keras.layers.LSTM(128))
+        model.add(keras.layers.Dropout(0.5))
+        model.add(keras.layers.Dense(1, activation='sigmoid'))
+        
+        model.compile(optimizer='rmsprop',
+        			 loss='binary_crossentropy',
+        			 metrics=['accuracy'])
+        
+        model.fit(X_train, y_train, batch_size=16, epochs=10)
+        loss, acc = model.evaluate(X_test, y_test, batch_size16)
+        
+snippet tf_lstm_stack "tensorflow lstm stack" b
+        # 生成虚拟数据
+        data_dim = 16
+        timesteps = 8
+        num_classes = 10
+        
+        # 期望输入数据尺寸: (batch_size, timesteps, data_dim)
+        model = keras.models.Sequential()
+        model.add(keras.layers.LSTM(32, return_sequences=True,
+        			 input_shape=(timesteps, data_dim)))  # 返回维度为 32 的向量序列
+        model.add(keras.layers.LSTM(32, return_sequences=True))  # 返回维度为 32 的向量序列
+        model.add(keras.layers.LSTM(32))  # 返回维度为 32 的单个向量
+        model.add(keras.layers.Dense(10, activation='softmax'))
+        
+        model.compile(loss='categorical_crossentropy',
+        			 optimizer='rmsprop',
+        			 metrics=['accuracy'])
+        
+        # 生成虚拟训练数据
+        X_train = np.random.random((1000, timesteps, data_dim))
+        y_train = np.random.random((1000, num_classes))
+        
+        # 生成虚拟验证数据
+        x_val = np.random.random((100, timesteps, data_dim))
+        y_val = np.random.random((100, num_classes))
+        
+        # 生成虚拟测试数据
+        X_test = np.random.random((100, timesteps, data_dim))
+        y_test = np.random.random((100, num_classes))
+        
+        model.fit(X_train, y_train,
+        		 batch_size=64, epochs=5,
+        		 validation_data=(x_val, y_val))
+        
+        loss, acc = model.evaluate(X_test, y_test)
+        
+snippet tf_lstm_stateful "tensorflow lstm stateful"
+        # 生成虚拟数据
+        data_dim = 16
+        timesteps = 8
+        num_classes = 10
+        batch_size = 32
+        
+        # 期望输入数据尺寸: (batch_size, timesteps, data_dim)
+        # 请注意，我们必须提供完整的 batch_input_shape，因为网络是有状态的。
+        # 第 k 批数据的第 i 个样本是第 k-1 批数据的第 i 个样本的后续。
+        model = keras.models.Sequential()
+        model.add(keras.layers.LSTM(32, return_sequences=True, stateful=True,
+        			 batch_input_shape=(batch_size, timesteps, data_dim)))
+        model.add(keras.layers.LSTM(32, return_sequences=True, stateful=True))
+        model.add(keras.layers.LSTM(32, stateful=True))
+        model.add(keras.layers.Dense(10, activation='softmax'))
+        
+        model.compile(loss='categorical_crossentropy',
+        			 optimizer='rmsprop',
+        			 metrics=['accuracy'])
+        
+        # 生成虚拟训练数据
+        X_train = np.random.random((batch_size * 10, timesteps, data_dim))
+        y_train = np.random.random((batch_size * 10, num_classes))
+        
+        # 生成虚拟验证数据
+        x_val = np.random.random((batch_size * 3, timesteps, data_dim))
+        y_val = np.random.random((batch_size * 3, num_classes))
+        
+        model.fit(X_train, y_train,
+        		 batch_size=batch_size, epochs=5, shuffle=False,
+        		 validation_data=(x_val, y_val))
+        
+snippet tf_lstm_bidirectional "tensorflow lstm bidirectional" b
+        # 生成虚拟数据
+        data_dim = 16
+        timesteps = 8
+        num_classes = 10
+        batch_size = 32
+        
+        model = keras.models.Sequential()
+        model.add(keras.layers.Bidirectional(keras.layers.LSTM(10, return_sequences=True),
+        					input_shape=(timesteps, data_dim),
+        					merge_mode='concat')) # {'sum', 'mul', 'concat', 'ave', None}
+        model.add(keras.layers.Bidirectional(keras.layers.LSTM(10)))
+        model.add(keras.layers.Dense(num_classes))
+        model.add(keras.layers.Activation('softmax'))
+        model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+        
+        # 生成虚拟训练数据
+        X_train = np.random.random((batch_size * 10, timesteps, data_dim))
+        y_train = np.random.random((batch_size * 10, num_classes))
+        
+        # 生成虚拟验证数据
+        x_val = np.random.random((batch_size * 3, timesteps, data_dim))
+        y_val = np.random.random((batch_size * 3, num_classes))
+        
+        model.fit(X_train, y_train,
+        		 batch_size=batch_size, epochs=5, shuffle=False,
+        		 validation_data=(x_val, y_val))

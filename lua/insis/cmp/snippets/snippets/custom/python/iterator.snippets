@@ -1,0 +1,7 @@
+snippet is_iterable "determine if an object is iterable" b
+        import collections
+        
+        if isinstance(${1:theElement}, collections.Iterable):
+            ${2:# iterable}
+        else:
+            ${3:# not iterable}

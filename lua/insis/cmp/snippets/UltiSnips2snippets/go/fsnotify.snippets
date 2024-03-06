@@ -1,0 +1,84 @@
+snippet fsnotify_init "fsnotiry init" b
+
+import {
+	"github.com/fsnotify/fsnotify"
+}
+
+log.Println("正在检查监控目录是否存在...")
+err := utils.IsFileExistAndMkdir(${1:config.Cfg.SourceDir})
+utils.ErrHandleFatalln(err, "新建监控目录失败："+$1)
+log.Println("检查监控父目录是否存在已完成！")
+
+log.Println("正在检查保存目录是否存在...")
+err = utils.IsFileExistAndMkdir(${2:config.Cfg.TargetDir})
+utils.ErrHandleFatalln(err, "新建保存目录失败："+$2)
+log.Println("检查保存目录是否存在已完成！")
+
+
+log.Println("正在初始化目录监控对象...")
+// 创建目录监控对象
+watch, err := fsnotify.NewWatcher()
+utils.ErrHandleFatalln(err, "初始化目录监控对象失败!")
+defer watch.Close()
+
+// 添加要监控的对象，文件或文件夹
+err = watch.Add($1)
+utils.ErrHandleFatalln(err, "目录监控对象添加监控目录失败!")
+log.Println("初始化目录监控对象完成！")
+
+log.Println("正在监控目录：" + $1)
+go func() {
+	for {
+		select {
+		case ev := <-watch.Events:
+			{
+				//判断事件发生的类型，如下5种
+				// Create 创建
+				// Write 写入
+				// Remove 删除
+				// Rename 重命名
+				// Chmod 修改权限
+				if ev.Op&fsnotify.Create == fsnotify.Create {
+					log.Println("监控发现新建日志文件：", ev.Name)
+					filepath := ev.Name
+					var lastSize int64
+					for {
+						fi, _ := os.Stat(filepath)
+						currentSize := fi.Size()
+						if currentSize == 0 || currentSize > lastSize {
+							lastSize = currentSize
+							log.Println("等待文件写入完成...")
+							time.Sleep(${3:monitoringPeriod})
+							continue
+						} else {
+							log.Println("文件写入完成！")
+							break
+						}
+					}
+					${0}
+				}
+				if ev.Op&fsnotify.Write == fsnotify.Write {
+					log.Println("写入文件 : ", ev.Name)
+				}
+				if ev.Op&fsnotify.Remove == fsnotify.Remove {
+					log.Println("删除文件 : ", ev.Name)
+				}
+				if ev.Op&fsnotify.Rename == fsnotify.Rename {
+					log.Println("重命名文件 : ", ev.Name)
+				}
+				if ev.Op&fsnotify.Chmod == fsnotify.Chmod {
+					log.Println("修改权限 : ", ev.Name)
+				}
+			}
+		case err := <-watch.Errors:
+			{
+				log.Println("error : ", err)
+				return
+			}
+		}
+	}
+}()
+
+//循环
+select {}
+endsnippet
