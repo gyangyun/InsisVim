@@ -290,17 +290,16 @@ local UserConfig = {
     -- enable 3 builtin terminal <leader>t a/b/c
     enable = true,
     keys = {
-      toggle_float_window = "<leader>ta",
+      toggle_float_window = "<leader>tf",
       toggle_float_window_command = nil,
-      toggle_side_window = "<leader>tb",
+      toggle_side_window = "<leader>tv",
       toggle_side_window_command = nil,
-      toggle_bottom_window = "<leader>tc",
+      toggle_bottom_window = "<leader>ts",
       toggle_bottom_window_command = nil,
-      -- toggle_term_send_current_line = "<leader>tsc",
-      -- toggle_term_send_visual_lines = "<leader>tsv",
-      -- toggle_term_send_visual_selection = "<leader>tss",
       toggle_term_send_current_line = "<leader>tt",
-      toggle_term_send_visual_selection = "<leader>ts",
+      -- send_visual_block
+      toggle_term_send_visual_selection = "<leader>tb",
+      -- send_visual_lines
       toggle_term_send_visual_lines = "<leader>tl",
     },
   },

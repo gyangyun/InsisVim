@@ -12,9 +12,10 @@ if toggleterm and cfg and cfg.enable then
   toggleterm.setup({
     size = function(term)
       if term.direction == "horizontal" then
-        return 15
+        -- return 15
+        return vim.o.rows * 0.5
       elseif term.direction == "vertical" then
-        return vim.o.columns * 0.3
+        return vim.o.columns * 0.5
       end
     end,
     start_in_insert = true,

@@ -1,7 +1,6 @@
 vim.g.encoding = "utf-8"
 vim.o.fileencoding = "utf-8"
 vim.opt.fileencodings = { "utf-8", "ucs-bom", "cp936", "gb18030", "big5", "gb2312", "euc-jp", "euc-kr", "latin1" }
-vim.opt.termencoding = "utf-8" -- 设置Vim所工作的终端terminal的字符编码方式
 
 -- jkhl padding
 vim.o.scrolloff = 8
@@ -119,3 +118,18 @@ local function initialize_directories()
   end
 end
 initialize_directories()
+
+if vim.fn.has("wsl") then
+  vim.g.clipboard = {
+    name = "win32yank-wsl",
+    copy = {
+      ["+"] = "win32yank.exe -i --crlf",
+      ["*"] = "win32yank.exe -i --crlf",
+    },
+    paste = {
+      ["+"] = "win32yank.exe -o --lf",
+      ["*"] = "win32yank.exe -o --lf",
+    },
+    cache_enabled = true,
+  }
+end
