@@ -238,7 +238,7 @@ local UserConfig = {
       change = "cs",
       -- visual mode
       visual = "S",
-      visual_line = "gs",
+      visual_line = "gS",
       -- disable
       insert = false,
       insert_line = false,
