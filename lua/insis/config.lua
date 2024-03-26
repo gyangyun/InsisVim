@@ -131,7 +131,7 @@ local UserConfig = {
   cmp = {
     enable = true,
     -- enable copilot cmp
-    copilot = true,
+    copilot = false,
     -- run ':Copilot auth' for the first time
     keys = {
       confirm = "<CR>",
@@ -396,6 +396,22 @@ local UserConfig = {
     keys = {
       toggle = "<leader>be",
       search = "<leader>bs",
+    },
+  },
+
+  ------------------------------------
+  -- shared nvim-spectre
+  ------------------------------------
+
+  ---@class NvimSpectreConfig
+  -- brew install gnu-sed
+  spectre = {
+    enable = true,
+    keys = {
+      toggle = "<leader>S",
+      search_file = "<leader>sf",
+      search_word = "<leader>sw",
+      search_visual = "<leader>sv",
     },
   },
 

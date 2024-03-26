@@ -76,6 +76,13 @@ return {
   { "nvim-treesitter/nvim-treesitter-refactor" },
   { "nvim-treesitter/nvim-treesitter-textobjects" },
   { "RRethy/nvim-treesitter-endwise" },
+  -- incremental_selection, depend on nvim-treesitter
+  {
+    "sustech-data/wildfire.nvim",
+    config = function()
+      require("insis.plugins.wildfire")
+    end,
+  },
 
   -- Comment
   { "JoosepAlviste/nvim-ts-context-commentstring" },
@@ -247,6 +254,15 @@ return {
     requires = "nvim-lua/plenary.nvim",
     config = function()
       require("insis.plugins.buffer_manager")
+    end,
+  },
+
+  -- search improvement
+  {
+    "nvim-pack/nvim-spectre",
+    requires = "nvim-lua/plenary.nvim",
+    config = function()
+      require("insis.plugins.nvim-spectre")
     end,
   },
 

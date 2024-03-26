@@ -119,17 +119,38 @@ local function initialize_directories()
 end
 initialize_directories()
 
--- if vim.fn.has("wsl") then
---   vim.g.clipboard = {
---     name = "win32yank-wsl",
---     copy = {
---       ["+"] = "win32yank.exe -i --crlf",
---       ["*"] = "win32yank.exe -i --crlf",
---     },
---     paste = {
---       ["+"] = "win32yank.exe -o --lf",
---       ["*"] = "win32yank.exe -o --lf",
---     },
---     cache_enabled = true,
---   }
+-- local sysname = vim.loop.os_uname().sysname
+-- if sysname == "Windows_NT" then
+--     -- Windows特定的配置
+--     print("这是Windows系统")
+-- elseif sysname == "Linux" then
+--     -- Linux特定的配置
+--     print("这是Linux系统")
+-- elseif sysname == "Darwin" then
+--     -- macOS特定的配置
+--     print("这是macOS系统")
 -- end
+
+local is_wsl = false
+local handle = io.popen("uname -r")
+local result = handle:read("*a")
+handle:close()
+
+if result:find("Microsoft") or result:find("WSL") then
+  is_wsl = true
+end
+
+if is_wsl then
+  vim.g.clipboard = {
+    name = "win32yank-wsl",
+    copy = {
+      ["+"] = "win32yank.exe -i --crlf",
+      ["*"] = "win32yank.exe -i --crlf",
+    },
+    paste = {
+      ["+"] = "win32yank.exe -o --lf",
+      ["*"] = "win32yank.exe -o --lf",
+    },
+    cache_enabled = true,
+  }
+end
