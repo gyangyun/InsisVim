@@ -110,11 +110,8 @@ cmp.setup({
       group_index = 2,
       priority = 1000,
     },
-    {
-      name = "copilot",
-      group_index = 2,
-      priority = 750,
-    },
+    { name = "codeium", group_index = 2, priority = 1000 },
+    { name = "copilot", group_index = 2, priority = 1000 },
     {
       name = "buffer",
       group_index = 3,

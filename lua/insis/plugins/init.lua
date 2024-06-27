@@ -168,23 +168,14 @@ return {
     end,
   },
 
-  -- hop
   {
-    "phaazon/hop.nvim",
-    branch = "v2", -- optional but strongly recommended
+    "kevinhwang91/nvim-ufo",
+    dependencies = "kevinhwang91/promise-async",
     config = function()
-      -- you can configure Hop the way you like here; see :h hop-config
-      require("insis.plugins.hop")
+      require("insis.plugins.nvim-ufo")
     end,
   },
 
-  -- text-case
-  {
-    "johmsalas/text-case.nvim",
-    config = function()
-      require("insis.plugins.text-case")
-    end,
-  },
   ------------------ Markdown -------------------------------------------------
   {
     "jakewvincent/mkdnflow.nvim",
@@ -378,6 +369,13 @@ return {
     "zbirenbaum/copilot-cmp",
     config = function()
       require("insis.plugins.copilot").copilot_cmp()
+    end,
+  },
+  -- Codeium
+  {
+    "Exafunction/codeium.nvim",
+    config = function()
+      require("insis.plugins.codeium").init()
     end,
   },
 }

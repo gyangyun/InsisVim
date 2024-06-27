@@ -40,7 +40,7 @@
 local UserConfig = {
 
   colorscheme = "tokyonight",
-  max_highlight_line_count = 10000,
+  max_highlight_line_count = 5000,
   enable_imselect = false,
   enable_very_magic_search = false,
   fix_windows_clipboard = false,
@@ -56,10 +56,6 @@ local UserConfig = {
     n_v_5k = "<C-k>",
     n_v_10k = "<C-u>",
     n_v_10j = "<C-d>",
-    fold = {
-      open = "zo",
-      close = "zc",
-    },
     terminal_to_normal = "<Esc>",
     back_to_normal = { "<ESC>", "jk", "JK" },
     back_to_window = "<C-w>",
@@ -133,6 +129,8 @@ local UserConfig = {
     -- enable copilot cmp
     copilot = false,
     -- run ':Copilot auth' for the first time
+    codeium = false,
+    -- run `:Codeium Auth ` for the first time
     keys = {
       confirm = "<CR>",
       select_next_item = "<C-j>",
