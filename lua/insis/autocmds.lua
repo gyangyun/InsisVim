@@ -181,7 +181,6 @@ autocmd({ "FileType" }, {
 })
 
 -- save fold
--- local saveable_type = { "*.lua", "*.js", "*.jsx", "*.ts", "*.tsx" }
 autocmd("BufWinEnter", {
   group = myAutoGroup,
   pattern = "*",

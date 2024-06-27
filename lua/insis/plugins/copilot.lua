@@ -7,54 +7,20 @@ local M = {}
 M.copilot = function()
   local copilot = pRequire("copilot")
   if copilot and cmp.copilot then
-    -- It is recommended to disable copilot.lua's suggestion and panel modules, as they can interfere with completions properly appearing in copilot-cmp. To do so, simply place the following in your copilot.lua config:
-    -- require("copilot").setup({
-    --   suggestion = { enabled = false },
-    --   panel = { enabled = false },
-    -- })
     copilot.setup({
       panel = {
-        enabled = false,
-        auto_refresh = true,
+        enabled = true,
+        auto_refresh = false,
         keymap = {
-          jump_prev = "[[",
-          jump_next = "]]",
-          accept = "<CR>",
-          refresh = "gr",
-          open = "<M-CR>",
+          jump_prev = "p",
+          jump_next = "n",
+          refresh = "r",
         },
         layout = {
           position = "bottom", -- | top | left | right
           ratio = 0.4,
         },
       },
-      suggestion = {
-        enabled = false,
-        auto_trigger = false,
-        debounce = 75,
-        keymap = {
-          accept = "<M-l>",
-          accept_word = false,
-          accept_line = false,
-          next = "<M-]>",
-          prev = "<M-[>",
-          dismiss = "<C-]>",
-        },
-      },
-      filetypes = {
-        python = true,
-        yaml = false,
-        markdown = false,
-        help = false,
-        gitcommit = false,
-        gitrebase = false,
-        hgcommit = false,
-        svn = false,
-        cvs = false,
-        ["."] = false,
-      },
-      copilot_node_command = "node", -- Node.js version must be > 16.x
-      server_opts_overrides = {},
     })
   end
 end
