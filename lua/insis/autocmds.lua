@@ -187,58 +187,18 @@ autocmd("BufWinEnter", {
   command = "silent! loadview",
 })
 
--- 每次退出buffer的时候都执行一下mkview，更新view文件，该操作会在view文件中保存当前光标位置，这将导致切到其他buffer再切回这个buffer后，会直接跳转到该光标位置。
--- autocmd("BufWrite", {
---   group = myAutoGroup,
---   pattern = "*",
---   command = "mkview",
--- })
--- 修改成离开buffer就执行mkview，这样再切换到其他buffer时就会记录当前view
--- 再结合上面的进入buffer时加载view，就可以跳转到刚才离开的位置
-autocmd("BufLeave", {
+autocmd("BufWrite", {
   group = myAutoGroup,
   pattern = "*",
-  -- command = "mkview",
-  callback = function()
-    local current_buffer = vim.api.nvim_get_current_buf()
-    local filename = vim.api.nvim_buf_get_name(current_buffer)
-    if filename ~= "" then
-      vim.cmd("mkview")
-    end
-  end,
-  -- callback = function()
-  -- 如果是buffer窗口这种buffer离开的话，直接执行mkview会报错，因此通过bufname过滤一下
-  -- print(vim.fn.bufname(""))
-  -- if not string.match(vim.fn.bufname(""), "^!") and not string.match(vim.fn.bufname(""), "^[A-Za-z0-9]*//") then
-  --   vim.cmd("mkview")
-  -- end
-  -- end,
+  command = "mkview",
 })
 
--- fix E490 no fold found
--- https//github.com/tmhedberg/SimpylFold/issues/130#issuecomment-1074049490
-autocmd("BufRead", {
-  group = myAutoGroup,
-  callback = function()
-    vim.api.nvim_create_autocmd("BufWinEnter", {
-      once = true,
-      command = "normal! zx zR",
-    })
-  end,
-})
-
--- Always switch to the current file directory
--- autocmd({ "BufRead", "BufNewFile", "BufEnter" }, {
---   group = myAutoGroup,
---   pattern = "*",
---   command = "lcd %:p:h",
--- })
-
--- Most prefer to automatically switch to the current file directory when a new buffer is opened
--- coc-python的python.execInTerminal等方法，会打开一个buffer来运行Terminal，名字为'!/bin/zsh'，%:p:h就是'!/bin'，这个不需要切换，否则会报错：E344: Can't find directory '!/bin' in cdpath
+-- automatically switch to the current file directory when a new buffer is opened
 autocmd({ "BufEnter" }, {
   group = myAutoGroup,
   pattern = "*",
+  -- command = "lcd %:p:h",
+  -- coc-python的python.execInTerminal等方法，会打开一个buffer来运行Terminal，名字为'!/bin/zsh'，%:p:h就是'!/bin'，这个不需要切换，否则会报错：E344: Can't find directory '!/bin' in cdpath
   callback = function()
     if not string.match(vim.fn.bufname(""), "^!") and not string.match(vim.fn.bufname(""), "^[A-Za-z0-9]*://") then
       vim.cmd("lcd %:p:h")
