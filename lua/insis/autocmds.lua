@@ -39,96 +39,12 @@ autocmd({ "BufNewFile", "BufRead" }, {
   command = "setfiletype markdown",
 })
 
-autocmd({ "BufNewFile", "BufRead" }, {
-  group = myAutoGroup,
-  pattern = "*.html.twig",
-  command = "set filetype=html.twig",
-})
-
-autocmd({ "BufNewFile", "BufRead" }, {
-  group = myAutoGroup,
-  pattern = "*.coffee",
-  command = "set filetype=coffee",
-})
-
--- autocmd({ "BufNewFile", "BufRead" }, {
---   group = myAutoGroup,
---   pattern = "*.txt",
---   command = "set filetype=txt",
--- })
-
-autocmd("FileType", {
-  group = myAutoGroup,
-  pattern = { "php", "python", "c", "java", "perl", "shell", "bash", "vim", "ruby", "cpp" },
-  command = "setlocal ai sw=4 ts=4 sts=4",
-})
-
-autocmd("FileType", {
-  group = myAutoGroup,
-  pattern = { "lua", "javascript", "html", "css", "xml", "vue", "scala" },
-  command = "setlocal ai sw=2 ts=2 sts=2",
-})
-
-autocmd("FileType", {
-  group = myAutoGroup,
-  pattern = { "haskell", "puppet", "ruby", "yml" },
-  command = "setlocal expandtab shiftwidth=2 softtabstop=2",
-})
-
 -- set wrap only in markdown
 autocmd("FileType", {
   group = myAutoGroup,
   pattern = { "markdown" },
   callback = function()
     vim.opt_local.wrap = true
-  end,
-})
-
--- Remove trailing whitespaces and ^M chars
-autocmd({ "FileType", "BufWritePre" }, {
-  group = myAutoGroup,
-  pattern = {
-    "c",
-    "cpp",
-    "java",
-    "go",
-    "php",
-    "javascript",
-    "puppet",
-    "python",
-    "rust",
-    "twig",
-    "xml",
-    "yml",
-    "perl",
-    "sql",
-  },
-  callback = function()
-    -- 准备工作：保存上一次的搜索以及光标位置
-    local last_search = vim.fn.getreg("/")
-    local cursor_pos = vim.fn.getcurpos()
-
-    -- 执行操作：删除行尾的空白字符
-    vim.cmd("%s/\\s\\+$//e")
-    -- 执行操作：删除行尾的^M字符
-    vim.cmd("%s/\\r$//e")
-
-    -- 清理工作：恢复上一次的搜索和光标位置
-    vim.fn.setreg("/", last_search)
-    vim.fn.setpos(".", cursor_pos)
-  end,
-})
-
--- auto run PackerSync when pluginlist is modified
-autocmd("BufWritePost", {
-  group = myAutoGroup,
-  -- autocmd BufWritePost plugins.lua source <afile> | PackerSync
-  callback = function()
-    if vim.fn.expand("<afile>") == "lua/insis/plugins/init.lua" then
-      vim.api.nvim_command("source lua/insis/plugins/init.lua")
-      require("insis.packer").setup()
-      vim.api.nvim_command("PackerSync")
-    end
   end,
 })
 
@@ -171,15 +87,6 @@ autocmd({ "FileType" }, {
   end,
 })
 
--- 增加python的快捷键，方便调试
-autocmd({ "FileType" }, {
-  group = myAutoGroup,
-  pattern = { "python" },
-  callback = function()
-    keymap("n", "<leader>B", "Ofrom IPython import embed;embed()<Esc>")
-  end,
-})
-
 -- save fold
 autocmd("BufWinEnter", {
   group = myAutoGroup,
@@ -193,6 +100,7 @@ autocmd("BufWrite", {
   command = "mkview",
 })
 
+-- =========================新增内容=========================
 -- automatically switch to the current file directory when a new buffer is opened
 autocmd({ "BufEnter" }, {
   group = myAutoGroup,
@@ -203,5 +111,52 @@ autocmd({ "BufEnter" }, {
     if not string.match(vim.fn.bufname(""), "^!") and not string.match(vim.fn.bufname(""), "^[A-Za-z0-9]*://") then
       vim.cmd("lcd %:p:h")
     end
+  end,
+})
+
+-- 设置不同语言的编码规范
+autocmd("FileType", {
+  group = myAutoGroup,
+  pattern = { "php", "python", "c", "java", "perl", "shell", "bash", "vim", "ruby", "cpp" },
+  command = "setlocal ai sw=4 ts=4 sts=4",
+})
+
+autocmd("FileType", {
+  group = myAutoGroup,
+  pattern = { "lua", "javascript", "html", "css", "xml", "vue", "scala" },
+  command = "setlocal ai sw=2 ts=2 sts=2",
+})
+
+autocmd("FileType", {
+  group = myAutoGroup,
+  pattern = { "haskell", "puppet", "ruby", "yml" },
+  command = "setlocal expandtab shiftwidth=2 softtabstop=2",
+})
+
+-- 在buffer写入内容后自动清楚空白字符和^M字符
+autocmd({ "BufWritePost" }, {
+  group = myAutoGroup,
+  callback = function()
+    -- 准备工作：保存上一次的搜索以及光标位置
+    local last_search = vim.fn.getreg("/")
+    local cursor_pos = vim.fn.getcurpos()
+
+    -- 执行操作：删除行尾的空白字符
+    vim.cmd("%s/\\s\\+$//e")
+    -- 执行操作：删除行尾的^M字符
+    vim.cmd("%s/\\r$//e")
+
+    -- 清理工作：恢复上一次的搜索和光标位置
+    vim.fn.setreg("/", last_search)
+    vim.fn.setpos(".", cursor_pos)
+  end,
+})
+
+-- 增加python的快捷键，方便调试
+autocmd({ "FileType" }, {
+  group = myAutoGroup,
+  pattern = { "python" },
+  callback = function()
+    keymap("n", "<leader>B", "Ofrom IPython import embed;embed()<Esc>")
   end,
 })
